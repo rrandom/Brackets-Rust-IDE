@@ -25,6 +25,9 @@
 /*global define, $, brackets */
 
 
+// modified from JSUtils.js in https://github.com/adobe/brackets/blob/5ef84133cb8c5acdcb7e80b85bbee86f65c2c9b1/src/language/JSUtils.js
+
+
 // TO-DO: write unit-test
 // see https://github.com/adobe/brackets/blob/5ef84133cb8c5acdcb7e80b85bbee86f65c2c9b1/test/spec/JSUtils-test.js
 // and https://github.com/adobe/brackets/wiki/Debugging-Test-Windows-in-Unit-Tests
