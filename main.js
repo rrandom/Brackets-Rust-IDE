@@ -37,10 +37,13 @@ define(function (require, exports, module) {
         StringMatch = brackets.getModule("utils/StringMatch"),
         RustUtils = require("RustUtils");
 
-
-    // ------------------------- SYNTAX HIGHTLIGHTER ------------------------------
     var LanguageManager = brackets.getModule('language/LanguageManager');
 
+    var CodeHintManager = brackets.getModule("editor/CodeHintManager"),
+        RustHintProvider = require("RustHintProvider");
+
+
+    // ------------------------- SYNTAX HIGHTLIGHTER ------------------------------
     LanguageManager.defineLanguage('rust', {
         name: 'Rust',
         mode: ["rust", "text/x-rustsrc"],
@@ -173,4 +176,9 @@ define(function (require, exports, module) {
     });
 
     // ------------------------------ END FIND DEFINITION ------------------------------------
+
+    // ------------------------------ CODE HINTS ----------------------------------------------
+    CodeHintManager.registerHintProvider(RustHintProvider, ["rust"], 1);
+    // ------------------------------ END CODE HINTS ------------------------------------------
+
 });
