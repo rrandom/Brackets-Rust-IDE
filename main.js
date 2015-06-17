@@ -38,7 +38,7 @@ define(function (require, exports, module) {
         RustUtils = require("RustUtils");
 
 
-    // syntax hightlighter
+    // ------------------------- SYNTAX HIGHTLIGHTER ------------------------------
     var LanguageManager = brackets.getModule('language/LanguageManager');
 
     LanguageManager.defineLanguage('rust', {
@@ -49,6 +49,10 @@ define(function (require, exports, module) {
         lineComment: ['//']
     });
 
+    // ------------------------- END SYNTAX HIGHTLIGHTER -------------------------
+
+
+    // ------------------------- FIND DEFINITION --------------------------------
     /**
      * FileLocation class
      * @constructor
@@ -90,10 +94,6 @@ define(function (require, exports, module) {
         return functionList;
     }
 
-
-
-
-
     /**
      * @param {string} query what the user is searching for
      * @param {StringMatch.StringMatcher} matcher object that caches search-in-progress data
@@ -130,7 +130,6 @@ define(function (require, exports, module) {
         // only match @ at beginning of query for now
         return (query[0] === "@");
     }
-
 
     /**
      * Scroll to the selected item in the current document (unless no query string entered yet,
@@ -172,4 +171,6 @@ define(function (require, exports, module) {
         itemSelect: itemSelect
 
     });
+
+    // ------------------------------ END FIND DEFINITION ------------------------------------
 });
