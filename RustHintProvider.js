@@ -35,6 +35,7 @@ define(function (require, exports, module) {
 
     // TO-DO
     function validToken(implicitChar) {
+        console.info('in validToken');
         return false;
     }
 
@@ -46,8 +47,8 @@ define(function (require, exports, module) {
     function getHintsD(txt, cursor) {
         $deferred = new $.Deferred();
         console.info('Call RustHinterDomain');
-        // TO-DO: cursor -> linenum, charnum
-        RustHinterDomain.exec("getHint", txt, cursor, ++vpet)
+        console.info(cursor.line + ' ' + cursor.ch);
+        RustHinterDomain.exec("getHint", txt, cursor.line, cursor.ch, ++vpet)
             .fail(function (err) {
                 console.error('[RustHinterDomain] Fail to get hints: ', err);
             });
@@ -62,8 +63,6 @@ define(function (require, exports, module) {
 
 
     function RustHintProvider() {
-
-
 
         function resolveHint(data, petition) {
             if (petition === vpet) {

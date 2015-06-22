@@ -38,7 +38,7 @@
     var _domainManager,
         spawn = require('child_process').spawn,
         exec = require('child_process').exec,
-        extName = '[rust-ide]',
+        extName = '[rust-ide] ',
         racerPath = 'D:\\tmp\\emacs\\racer\\target\\release\\racer.exe';
 
 
@@ -55,15 +55,13 @@
     function cmdGetHint(txt, linenum, charnum, petition) {
         console.info('cmdGetHint --> ');
         try {
-            var racer = spawn(racerPath, ['complete',
-                                          linenum,
-                                         charnum,
-                                          //TO-DO
-                                         'tmp.racertmp']);
+            // TO-DO
+            var racer = spawn(racerPath, ['complete', linenum, charnum, 'tmp.racertmp']);
+
             var tmp = '';
 
-            racer.stdin.write(txt);
-            racer.stdin.end();
+            //racer.stdin.write(txt);
+            //racer.stdin.end();
 
             racer.stdout.on('data', function (data) {
                 tmp += data.toString();
@@ -74,6 +72,7 @@
             });
 
             racer.on('close', function (code) {
+                console.info(extName + tmp);
                 _domainManager.emitEvent('RustHinter', 'update', [tmp, petition]);
             });
 

@@ -22,7 +22,7 @@
  */
 
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
-/*global define, $, brackets */
+/*global define, $, brackets, setTimeout */
 
 
 // modified from default extension QuickOpenJavaScript in brackets
@@ -31,7 +31,8 @@
 define(function (require, exports, module) {
     "use strict";
 
-    var EditorManager = brackets.getModule("editor/EditorManager"),
+    var AppInit = brackets.getModule("utils/AppInit"),
+        EditorManager = brackets.getModule("editor/EditorManager"),
         QuickOpen = brackets.getModule("search/QuickOpen"),
         DocumentManager = brackets.getModule("document/DocumentManager"),
         StringMatch = brackets.getModule("utils/StringMatch"),
@@ -43,7 +44,7 @@ define(function (require, exports, module) {
         RustHintProvider = require("RustHintProvider");
 
 
-    // ------------------------- SYNTAX HIGHTLIGHTER ------------------------------
+    // ------------------------- SYNTAX HIGHTLIGHTER -----------------------
     LanguageManager.defineLanguage('rust', {
         name: 'Rust',
         mode: ["rust", "text/x-rustsrc"],
@@ -52,10 +53,10 @@ define(function (require, exports, module) {
         lineComment: ['//']
     });
 
-    // ------------------------- END SYNTAX HIGHTLIGHTER -------------------------
+    // ------------------------- END SYNTAX HIGHTLIGHTER -------------------
 
 
-    // ------------------------- FIND DEFINITION --------------------------------
+    // ------------------------- FIND DEFINITION ---------------------------
     /**
      * FileLocation class
      * @constructor
@@ -175,10 +176,27 @@ define(function (require, exports, module) {
 
     });
 
-    // ------------------------------ END FIND DEFINITION ------------------------------------
+    // ------------------------------ END FIND DEFINITION ------------------
 
-    // ------------------------------ CODE HINTS ----------------------------------------------
-    CodeHintManager.registerHintProvider(RustHintProvider, ["rust"], 1);
-    // ------------------------------ END CODE HINTS ------------------------------------------
+    // ------------------------------ CODE HINTS ---------------------------
+    function startup() {
+        try {
+            var rustHintProvider = new RustHintProvider();
+            console.info('Registering Rust Hint Provider');
+            CodeHintManager.registerHintProvider(rustHintProvider, ["rust"], 1);
+            console.info('Registered Rust Hint Provider');
+        } catch (e) {
+            console.error("Error starting up go hint provider", e);
+            setTimeout(startup, 100);
+        }
+    }
+
+    // ------------------------------ END CODE HINTS -----------------------
+
+    AppInit.appReady(function () {
+
+        startup();
+
+    });
 
 });
