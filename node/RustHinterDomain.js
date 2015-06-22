@@ -77,6 +77,8 @@
                 _domainManager.emitEvent('RustHinter', 'update', [tmp, petition]);
             });
 
+            racer.unref();
+
 
         } catch (e) {
             console.error(extName + e);
