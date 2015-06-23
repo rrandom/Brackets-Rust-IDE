@@ -57,6 +57,7 @@ define(function (require, exports, module) {
 
     }
 
+    // TO-DO: should return jquery object?
     function formatHints(data) {
         var rs, ta = data.split('\n');
         ta.shift();
