@@ -31,8 +31,8 @@ define(function (require, exports, module) {
     });
 
     //
-    var $deferred, cm, vpet = 0;
-
+    var $deferred, cm, vpet = 0,
+        extPath = ExtensionUtils.getModulePath(module);
 
     var endtokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
 
@@ -43,11 +43,6 @@ define(function (require, exports, module) {
         } else {
             return false;
         }
-    }
-
-    // TO-DO
-    function getLastToken() {
-        return 'i';
     }
 
     function getHintsD(txt, cursor) {
@@ -67,7 +62,7 @@ define(function (require, exports, module) {
         ta.shift();
 
         rs = ta.map(function (i) {
-            return /MATCH ([^,]+),(\d)/.exec(i)[1];
+            return (/MATCH ([^,]+),(\d)/.exec(i)[1]);
         });
         return rs;
     }

@@ -38,6 +38,7 @@
     var _domainManager,
         spawn = require('child_process').spawn,
         exec = require('child_process').exec,
+        fs = require('fs'),
         extName = '[rust-ide] ',
         racerPath = 'D:\\tmp\\emacs\\racer\\target\\release\\racer.exe';
 
@@ -55,7 +56,17 @@
     function cmdGetHint(txt, linenum, charnum, petition) {
         console.info('cmdGetHint --> ');
         try {
-            // TO-DO
+            /*
+            var theTmpFile = path + 'tmp.racertmp';
+            console.info('theTmpFile ' + theTmpFile);
+            fs.writeFileSync(theTmpFile, txt, function (err) {
+                if (err) {
+                    console.error("fs write error " + err);
+                }
+                console.log("write txt success");
+            });
+            */
+
             var racer = spawn(racerPath, ['complete', linenum, charnum, 'tmp.racertmp']);
 
             var tmp = '';
@@ -97,19 +108,51 @@
             });
         }
 
-        //TO-DO
         domainManager.registerCommand(
-            "RustHinter",
-            "getHint",
-            cmdGetHint,
-            false,
-            "Return Rust Hints", [], []
+            "RustHinter", // domain name
+            "getHint", // command name
+            cmdGetHint, // command handler function
+            false, // asynchronous
+            "Return Rust Hints", [
+                {
+                    name: "txt",
+                    type: "string",
+                    description: "current editing file"
+                },
+                {
+                    name: "linenum",
+                    type: "number",
+                    description: "line number"
+                },
+                {
+                    name: "charnum",
+                    type: "number",
+                    description: "character number"
+                },
+                /*
+                {
+                    name: "path",
+                    type: "string",
+                    description: "extension path"
+                },
+                */
+                {
+                    name: "petition",
+                    type: "number",
+                    description: "petition number"
+                }
+            ], []
         );
 
-        //TO-DO
         domainManager.registerEvent(
             "RustHinter",
-            "update", []
+            "update", [{
+                name: "data",
+                type: "string"
+            }, {
+                name: "petition",
+                type: "number"
+            }]
         );
 
         _domainManager = domainManager;
