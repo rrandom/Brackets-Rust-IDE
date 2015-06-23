@@ -33,10 +33,16 @@ define(function (require, exports, module) {
     //
     var $deferred, cm, vpet = 0;
 
-    // TO-DO
+
+    var endtokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
+
     function validToken(implicitChar) {
-        console.info('in validToken');
-        return false;
+        if (implicitChar) {
+            var code = implicitChar.charCodeAt(0);
+            return (endtokens.indexOf(implicitChar) === -1) && (code !== 13) && (code !== 9);
+        } else {
+            return false;
+        }
     }
 
     // TO-DO
@@ -56,9 +62,14 @@ define(function (require, exports, module) {
 
     }
 
-    // TO-DO
     function formatHints(data) {
-        return data;
+        var rs, ta = data.split('\n');
+        ta.shift();
+
+        rs = ta.map(function (i) {
+            return /MATCH ([^,]+),(\d)/.exec(i)[1];
+        });
+        return rs;
     }
 
 
@@ -100,9 +111,9 @@ define(function (require, exports, module) {
             if (!$hint) {
                 throw new TypeError("Must provide valid hint and hints object as they are returned by calling getHints");
             } else {
-                // TO-DO: Consider these two lines, maybe don't need it
-                var lasttoken = getLastToken();
-                cm.replaceSelection($hint.data('token').substring(lasttoken.length));
+                //var lasttoken = getLastToken();
+                //cm.replaceSelection($hint.data('token').substring(lasttoken.length));
+                cm.replaceSelection($hint);
             }
         };
 
@@ -117,7 +128,11 @@ define(function (require, exports, module) {
                     data = '';
                 }
                 console.info('#### On update event, data: ' + data);
-                resolveHint(data, petition);
+                if (data) {
+                    resolveHint(data, petition);
+                } else {
+                    console.warn("No matching");
+                }
             }
         });
     }
