@@ -68,7 +68,7 @@ define(function (require, exports, module) {
                 rs.push(t[1]);
             } catch (e) {
                 console.error("could not get match: ", e);
-                console.error(t);
+                console.error(ta[i]);
             }
         }
         return rs;

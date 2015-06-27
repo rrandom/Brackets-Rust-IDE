@@ -44,13 +44,13 @@
 
 
     // TO-DO: hints cache
-    // TO-DO: call racer correctly
     /**
      * @private
      * call outside racer
-     * @param txt {string} current edit buffer/
+     * @param txt {string} current edit buffer
      * @param linenum {number}
      * @param charnum {number}
+     * @param path {string} extension buffer
      * @param petition {number}
      */
     function cmdGetHint(txt, linenum, charnum, path, petition) {
@@ -61,8 +61,7 @@
             console.info('theTmpFile: ' + theTmpFile);
             fs.writeFileSync(theTmpFile, txt);
 
-            // TO-DO: fix this line
-            var racer = spawn(racerPath, ['complete', linenum, charnum, 'C:/Users/Y.Li/AppData/Roaming/Brackets/extensions/user/Brackets-Rust-IDE/tmp.racertmp']);
+            var racer = spawn(racerPath, ['complete', linenum, charnum, theTmpFile]);
 
             var tmp = '';
 
@@ -124,13 +123,11 @@
                     type: "number",
                     description: "character number"
                 },
-                /*
                 {
                     name: "path",
                     type: "string",
                     description: "extension path"
                 },
-                */
                 {
                     name: "petition",
                     type: "number",
