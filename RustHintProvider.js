@@ -48,8 +48,8 @@ define(function (require, exports, module) {
     function getHintsD(txt, cursor) {
         $deferred = new $.Deferred();
         console.info('Call RustHinterDomain');
-        console.info(cursor.line + ' ' + cursor.ch);
-        RustHinterDomain.exec("getHint", txt, cursor.line, cursor.ch, ++vpet)
+        //console.info(cursor.line + ' ' + cursor.ch);
+        RustHinterDomain.exec("getHint", txt, (cursor.line + 1), cursor.ch, ++vpet)
             .fail(function (err) {
                 console.error('[RustHinterDomain] Fail to get hints: ', err);
             });
@@ -58,20 +58,21 @@ define(function (require, exports, module) {
     }
 
     function formatHints(data) {
-        var rs, ta = data.split('\n');
-        console.info('Array? ' + (ta instanceof Array));
-        console.info('splited: ' + ta);
-        ta.shift();
-        // TO-DO: fix this line
-        /*
-        rs = ta.map(function (i) {
-            return (/MATCH ([^,]+),(\d)/.exec(i)[1]);
-        });
-        */
-        console.info('formated hints: ' + rs);
-        //return rs;
-        return ta;
+        var i, t,
+            rs = [],
+            ta = data.split('\n');
 
+        ta.shift();
+        for (i in ta) {
+            try {
+                t = (/MATCH ([^,]+),(\d)/.exec(ta[i]));
+                rs.push(t[1]);
+            } catch (e) {
+                console.error("could not get match: ", e);
+                console.error(t);
+            }
+        }
+        return rs;
     }
 
 
@@ -115,6 +116,8 @@ define(function (require, exports, module) {
             } else {
                 //var lasttoken = getLastToken();
                 //cm.replaceSelection($hint.data('token').substring(lasttoken.length));
+
+                // TO-DO: get prefix and call substring
                 cm.replaceSelection($hint);
             }
         };
