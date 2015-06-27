@@ -64,16 +64,9 @@ define(function (require, exports, module) {
         prefix = ta.shift().split(',').pop();
         ta.pop();
 
-        for (i = 0; i < ta.length; i++) {
-            try {
-                t = (/MATCH ([^,]+),(\d)/.exec(ta[i]));
-                rs.push(t[1]);
-            } catch (e) {
-
-                console.info("could not get match: ", e);
-                console.info(ta[i]);
-            }
-        }
+        rs = ta.map(function (i) {
+            return (/MATCH ([^,]+),(\d)/.exec(i)[1]);
+        });
         return rs;
     }
 
@@ -102,7 +95,6 @@ define(function (require, exports, module) {
             console.info('Asking Hints');
 
             if (validToken(implicitChar)) {
-                // cursor: {line, ch}
                 var cursor = cm.getCursor(),
                     txt = cm.getValue();
                 return getHintsD(txt, cursor);
