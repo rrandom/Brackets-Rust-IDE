@@ -57,15 +57,21 @@ define(function (require, exports, module) {
 
     }
 
-    // TO-DO: should return jquery object?
     function formatHints(data) {
         var rs, ta = data.split('\n');
+        console.info('Array? ' + (ta instanceof Array));
+        console.info('splited: ' + ta);
         ta.shift();
-
+        // TO-DO: fix this line
+        /*
         rs = ta.map(function (i) {
             return (/MATCH ([^,]+),(\d)/.exec(i)[1]);
         });
-        return rs;
+        */
+        console.info('formated hints: ' + rs);
+        //return rs;
+        return ta;
+
     }
 
 

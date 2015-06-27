@@ -67,7 +67,8 @@
             });
             */
 
-            var racer = spawn(racerPath, ['complete', linenum, charnum, 'tmp.racertmp']);
+            // TO-DO: fix this line
+            var racer = spawn(racerPath, ['complete', linenum, charnum, 'C:/Users/Y.Li/AppData/Roaming/Brackets/extensions/user/Brackets-Rust-IDE/tmp.racertmp']);
 
             var tmp = '';
 
