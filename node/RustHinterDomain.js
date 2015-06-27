@@ -42,6 +42,7 @@
         extName = '[rust-ide] ',
         racerPath = 'D:\\tmp\\emacs\\racer\\target\\release\\racer.exe';
 
+    // TO-DO: resolve racerPath
 
     // TO-DO: hints cache
     /**
@@ -54,11 +55,10 @@
      * @param petition {number}
      */
     function cmdGetHint(txt, linenum, charnum, path, petition) {
-        console.info('cmdGetHint --> ');
+        //console.info('cmdGetHint --> ');
         try {
 
             var theTmpFile = path + 'tmp.racertmp';
-            console.info('theTmpFile: ' + theTmpFile);
             fs.writeFileSync(theTmpFile, txt);
 
             var racer = spawn(racerPath, ['complete', linenum, charnum, theTmpFile]);
