@@ -48,8 +48,7 @@ define(function (require, exports, module) {
     function getHintsD(txt, cursor) {
         $deferred = new $.Deferred();
         console.info('Call RustHinterDomain');
-        //console.info(cursor.line + ' ' + cursor.ch);
-        RustHinterDomain.exec("getHint", txt, (cursor.line + 1), cursor.ch, ++vpet)
+        RustHinterDomain.exec("getHint", txt, (cursor.line + 1), cursor.ch, extPath, ++vpet)
             .fail(function (err) {
                 console.error('[RustHinterDomain] Fail to get hints: ', err);
             });
@@ -63,7 +62,7 @@ define(function (require, exports, module) {
             ta = data.split('\n');
 
         ta.shift();
-        for (i in ta) {
+        for (i = 0; i < ta.length; i++) {
             try {
                 t = (/MATCH ([^,]+),(\d)/.exec(ta[i]));
                 rs.push(t[1]);

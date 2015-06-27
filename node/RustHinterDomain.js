@@ -53,19 +53,13 @@
      * @param charnum {number}
      * @param petition {number}
      */
-    function cmdGetHint(txt, linenum, charnum, petition) {
+    function cmdGetHint(txt, linenum, charnum, path, petition) {
         console.info('cmdGetHint --> ');
         try {
-            /*
+
             var theTmpFile = path + 'tmp.racertmp';
-            console.info('theTmpFile ' + theTmpFile);
-            fs.writeFileSync(theTmpFile, txt, function (err) {
-                if (err) {
-                    console.error("fs write error " + err);
-                }
-                console.log("write txt success");
-            });
-            */
+            console.info('theTmpFile: ' + theTmpFile);
+            fs.writeFileSync(theTmpFile, txt);
 
             // TO-DO: fix this line
             var racer = spawn(racerPath, ['complete', linenum, charnum, 'C:/Users/Y.Li/AppData/Roaming/Brackets/extensions/user/Brackets-Rust-IDE/tmp.racertmp']);
