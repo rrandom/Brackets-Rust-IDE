@@ -38,8 +38,48 @@ define(function (require, exports, module) {
     prefs.definePreference("racerPath", "string", "");
 
     // TO-DO a dialog to set racerPath
-    prefs.set("racerPath", 'D:\\tmp\\emacs\\racer\\target\\release\\racer.exe');
-    prefs.save();
+
+    // this function copied and modifitied from zaggino.brackets-git
+    function handleHelloWorld() {
+        var questionDialogTemplate = require("text!templates/git-question-dialog.html");
+        var compiledTemplate = Mustache.render(questionDialogTemplate, {
+            title: "Rust-IDE",
+            question: "Set your racer path",
+            stringInput: "input string:",
+            defaultValue: prefs.get("racerPath"),
+            BUTTON_CANCEL: "Cancel",
+            BUTTON_OK: "OK"
+        });
+        var dialog = Dialogs.showModalDialogUsingTemplate(compiledTemplate);
+        var $dialog = dialog.getElement();
+        dialog.done(function (buttonId) {
+            if (buttonId === "ok") {
+                console.info("you click ok");
+                var $dialog = dialog.getElement();
+                $("*[settingsProperty]", $dialog).each(function () {
+                    var $this = $(this),
+                        type = $this.attr("type"),
+                        property = $this.attr("settingsProperty");
+                    // get input value;
+                    ($this.val().trim());
+                    prefs.set("racerPath", $this.val().trim());
+                    prefs.save();
+                });
+            }
+        });
+
+        console.log("set success: " + prefs.get("racerPath"));
+    }
+
+
+    // First, register a command - a UI-less object associating an id to a handler
+    var MY_COMMAND_ID = "helloworld.sayhello"; // package-style naming to avoid collisions
+    CommandManager.register("Hello World", MY_COMMAND_ID, handleHelloWorld);
+
+    // Then create a menu item bound to the command
+    // The label of the menu item is the name we gave the command (see above)
+    var menu = Menus.getMenu(Menus.AppMenuBar.FILE_MENU);
+    menu.addMenuItem(MY_COMMAND_ID);
 
     //
     var prefix, $deferred, cm, vpet = 0,
