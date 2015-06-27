@@ -39,8 +39,8 @@
         spawn = require('child_process').spawn,
         exec = require('child_process').exec,
         fs = require('fs'),
-        extName = '[rust-ide] ',
-        racerPath = 'D:\\tmp\\emacs\\racer\\target\\release\\racer.exe';
+        extName = '[rust-ide] ';
+    //racerPath = 'D:\\tmp\\emacs\\racer\\target\\release\\racer.exe';
 
     // TO-DO: resolve racerPath
 
@@ -54,7 +54,7 @@
      * @param path {string} extension buffer
      * @param petition {number}
      */
-    function cmdGetHint(txt, linenum, charnum, path, petition) {
+    function cmdGetHint(racerPath, txt, linenum, charnum, path, petition) {
         //console.info('cmdGetHint --> ');
         try {
 

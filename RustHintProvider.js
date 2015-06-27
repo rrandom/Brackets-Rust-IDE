@@ -19,7 +19,12 @@ define(function (require, exports, module) {
 
     var ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         NodeDomain = brackets.getModule('utils/NodeDomain'),
-        NodeConnection = brackets.getModule('utils/NodeConnection');
+        NodeConnection = brackets.getModule('utils/NodeConnection'),
+        PreferencesManager = brackets.getModule("preferences/PreferencesManager"),
+        prefs = PreferencesManager.getExtensionPrefs("Rust-IDE"),
+        CommandManager = brackets.getModule("command/CommandManager"),
+        Menus = brackets.getModule("command/Menus"),
+        Dialogs = brackets.getModule("widgets/Dialogs");
 
     var RustHinterDomain;
     var nodeConnection = new NodeConnection();
@@ -29,6 +34,12 @@ define(function (require, exports, module) {
         RustHinterDomain = new NodeDomain('RustHinter',
             ExtensionUtils.getModulePath(module, "node/RustHinterDomain"));
     });
+
+    prefs.definePreference("racerPath", "string", "");
+
+    // TO-DO a dialog to set racerPath
+    prefs.set("racerPath", 'D:\\tmp\\emacs\\racer\\target\\release\\racer.exe');
+    prefs.save();
 
     //
     var prefix, $deferred, cm, vpet = 0,
@@ -48,7 +59,7 @@ define(function (require, exports, module) {
     function getHintsD(txt, cursor) {
         $deferred = new $.Deferred();
         console.info('Call RustHinterDomain');
-        RustHinterDomain.exec("getHint", txt, (cursor.line + 1), cursor.ch, extPath, ++vpet)
+        RustHinterDomain.exec("getHint", prefs.get("racerPath"), txt, (cursor.line + 1), cursor.ch, extPath, ++vpet)
             .fail(function (err) {
                 console.error('[RustHinterDomain] Fail to get hints: ', err);
             });
