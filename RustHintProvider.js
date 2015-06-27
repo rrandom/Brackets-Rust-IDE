@@ -31,7 +31,7 @@ define(function (require, exports, module) {
     });
 
     //
-    var $deferred, cm, vpet = 0,
+    var prefix, $deferred, cm, vpet = 0,
         extPath = ExtensionUtils.getModulePath(module);
 
     var endtokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
@@ -61,14 +61,17 @@ define(function (require, exports, module) {
             rs = [],
             ta = data.split('\n');
 
-        ta.shift();
+        prefix = ta.shift().split(',').pop();
+        ta.pop();
+
         for (i = 0; i < ta.length; i++) {
             try {
                 t = (/MATCH ([^,]+),(\d)/.exec(ta[i]));
                 rs.push(t[1]);
             } catch (e) {
-                console.error("could not get match: ", e);
-                console.error(ta[i]);
+
+                console.info("could not get match: ", e);
+                console.info(ta[i]);
             }
         }
         return rs;
@@ -113,11 +116,8 @@ define(function (require, exports, module) {
             if (!$hint) {
                 throw new TypeError("Must provide valid hint and hints object as they are returned by calling getHints");
             } else {
-                //var lasttoken = getLastToken();
-                //cm.replaceSelection($hint.data('token').substring(lasttoken.length));
-
-                // TO-DO: get prefix and call substring
-                cm.replaceSelection($hint);
+                console.info('$hint: ' + $hint);
+                cm.replaceSelection($hint.substring(prefix.length));
             }
         };
 

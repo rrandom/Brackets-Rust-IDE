@@ -77,7 +77,6 @@
             });
 
             racer.on('close', function (code) {
-                console.info(extName + tmp);
                 _domainManager.emitEvent('RustHinter', 'update', [tmp, petition]);
             });
 
