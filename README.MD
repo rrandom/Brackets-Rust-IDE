@@ -8,4 +8,4 @@ Get ``racer`` here:
 https://github.com/phildawes/racer
 
 #### Screenshot
-![Rust-IDE](https://github.com/rrandom/raw/master/images/screenshot.png)
+![Rust-IDE](https://raw.githubusercontent.com/rrandom/Brackets-Rust-IDE/master/images/screenshot.png)
