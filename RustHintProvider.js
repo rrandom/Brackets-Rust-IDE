@@ -40,7 +40,7 @@ define(function (require, exports, module) {
 
     // this function copied and modifitied from zaggino.brackets-git
     function showRustIDEDialog() {
-        var questionDialogTemplate = require("text!templates/git-question-dialog.html");
+        var questionDialogTemplate = require("text!templates/rust-ide-settings.html");
         var compiledTemplate = Mustache.render(questionDialogTemplate, {
             title: "Rust-IDE Settings",
             question: "Set your racer path",

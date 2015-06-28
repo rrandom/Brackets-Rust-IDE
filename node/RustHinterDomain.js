@@ -40,9 +40,6 @@
         exec = require('child_process').exec,
         fs = require('fs'),
         extName = '[rust-ide] ';
-    //racerPath = 'D:\\tmp\\emacs\\racer\\target\\release\\racer.exe';
-
-    // TO-DO: resolve racerPath
 
     // TO-DO: hints cache
     /**
@@ -65,9 +62,6 @@
             var racer = spawn(racerPath, ['complete', linenum, charnum, theTmpFile]);
 
             var tmp = '';
-
-            //racer.stdin.write(txt);
-            //racer.stdin.end();
 
             racer.stdout.on('data', function (data) {
                 tmp += data.toString();
