@@ -12,7 +12,7 @@
 
 
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
-/*global define, $, brackets */
+/*global define, $, brackets, Mustache */
 
 define(function (require, exports, module) {
     'use strict';
@@ -24,6 +24,7 @@ define(function (require, exports, module) {
         prefs = PreferencesManager.getExtensionPrefs("Rust-IDE"),
         CommandManager = brackets.getModule("command/CommandManager"),
         Menus = brackets.getModule("command/Menus"),
+        Commands = brackets.getModule("command/Commands"),
         Dialogs = brackets.getModule("widgets/Dialogs");
 
     var RustHinterDomain;
@@ -37,49 +38,39 @@ define(function (require, exports, module) {
 
     prefs.definePreference("racerPath", "string", "");
 
-    // TO-DO a dialog to set racerPath
-
     // this function copied and modifitied from zaggino.brackets-git
-    function handleHelloWorld() {
+    function showRustIDEDialog() {
         var questionDialogTemplate = require("text!templates/git-question-dialog.html");
         var compiledTemplate = Mustache.render(questionDialogTemplate, {
-            title: "Rust-IDE",
+            title: "Rust-IDE Settings",
             question: "Set your racer path",
-            stringInput: "input string:",
             defaultValue: prefs.get("racerPath"),
             BUTTON_CANCEL: "Cancel",
             BUTTON_OK: "OK"
         });
         var dialog = Dialogs.showModalDialogUsingTemplate(compiledTemplate);
-        var $dialog = dialog.getElement();
         dialog.done(function (buttonId) {
             if (buttonId === "ok") {
                 console.info("you click ok");
                 var $dialog = dialog.getElement();
                 $("*[settingsProperty]", $dialog).each(function () {
-                    var $this = $(this),
-                        type = $this.attr("type"),
-                        property = $this.attr("settingsProperty");
-                    // get input value;
-                    ($this.val().trim());
+                    var $this = $(this);
                     prefs.set("racerPath", $this.val().trim());
-                    prefs.save();
                 });
             }
         });
-
-        console.log("set success: " + prefs.get("racerPath"));
+        prefs.save();
     }
 
 
     // First, register a command - a UI-less object associating an id to a handler
-    var MY_COMMAND_ID = "helloworld.sayhello"; // package-style naming to avoid collisions
-    CommandManager.register("Hello World", MY_COMMAND_ID, handleHelloWorld);
+    var RUST_IDE_SETTINGS = "rustide.settings"; // package-style naming to avoid collisions
+    CommandManager.register("Rust-IDE Settings", RUST_IDE_SETTINGS, showRustIDEDialog);
 
     // Then create a menu item bound to the command
     // The label of the menu item is the name we gave the command (see above)
     var menu = Menus.getMenu(Menus.AppMenuBar.FILE_MENU);
-    menu.addMenuItem(MY_COMMAND_ID);
+    menu.addMenuItem(RUST_IDE_SETTINGS, "", Menus.AFTER, Commands.FILE_PROJECT_SETTINGS);
 
     //
     var prefix, $deferred, cm, vpet = 0,

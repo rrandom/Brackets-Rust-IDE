@@ -48,6 +48,7 @@
     /**
      * @private
      * call outside racer
+     * @param racerPath {string}
      * @param txt {string} current edit buffer
      * @param linenum {number}
      * @param charnum {number}
@@ -107,6 +108,11 @@
             cmdGetHint, // command handler function
             false, // asynchronous
             "Return Rust Hints", [
+                {
+                    name: "racerPath",
+                    type: "string",
+                    description: "absolute path to racer"
+                },
                 {
                     name: "txt",
                     type: "string",

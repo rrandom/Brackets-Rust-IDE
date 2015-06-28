@@ -1,19 +1,11 @@
-<div id="git-question-dialog" class="modal">
+<div id="rust-ide-dialog" class="modal">
     <div class="modal-header">
         <h1 class="dialog-title">{{title}}</h1>
     </div>
     <div class="modal-body table-striped tab-content">
-        <p>{{{question}}}</p>
-        {{#stringInput}}
-        <input class="stringInput" type="text" value="{{defaultValue}}" settingsProperty="gitPath" /> {{/stringInput}}
+        <label for="rust-settings-racerPath">{{question}}:</label>
+        <input id="rust-setting-gitPath" type="text" value="{{defaultValue}}" settingsProperty="rustPath" style="width: 500px" />
     </div>
-
-    <!--
-    <div class="row-fluid">
-        <label for="git-settings-gitPath">{{PATH_TO_GIT_EXECUTABLE}}:</label>
-        <input id="git-settings-gitPath" type="text" settingsProperty="gitPath" />
-    </div>
--->
     <div class="modal-footer">
         <button data-button-id="cancel" class="dialog-button btn cancel btn-80">{{BUTTON_CANCEL}}</button>
         <button data-button-id="ok" class="dialog-button btn primary btn-80">{{BUTTON_OK}}</button>
