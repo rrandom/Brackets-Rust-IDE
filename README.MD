@@ -14,14 +14,16 @@ https://github.com/phildawes/racer
 
 #### To-Do
 1. Do not call racer when cursor inside string("").
-    ;; search for codemirror might be helpful, because codemirror could highlight string.
+    <!-- search for codemirror might be helpful, because codemirror could highlight string.  -->
     
 2. Call racer once a word, not once a character.
-    ;; maybe need a variable to track current word
+    <!-- maybe need a variable to track current word -->
 
 3. Add syntax words hint like ``fn, use, match``.
 
 4. Add common macros hint like ``println!``.
 
-5. Add highlight for toml.(both *.toml and *.lock)
-    ;; http://codemirror.net/mode/toml/index.html
+5. differentiate the hints(marco, syntax, get from racer) by different css color style.
+
+6. Add highlight for toml.(for both *.toml and *.lock)
+    <!-- check outhttp://codemirror.net/mode/toml/index.html ->
