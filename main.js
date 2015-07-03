@@ -53,6 +53,13 @@ define(function (require, exports, module) {
         lineComment: ['//']
     });
 
+    LanguageManager.defineLanguage('toml', {
+        name: 'toml',
+        mode: ["toml", "text/x-toml"],
+        fileExtensions: ['toml', 'lock'],
+        lineComment: ['#']
+    });
+
     // ------------------------- END SYNTAX HIGHTLIGHTER -------------------
 
 

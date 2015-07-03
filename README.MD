@@ -25,7 +25,7 @@ https://github.com/phildawes/racer
 
 5. differentiate the hints(marco, syntax, get from racer) by different css color style.
 
-6. Add highlight for toml.(for both *.toml and *.lock)
+6. ~~Add highlight for toml.(for both *.toml and *.lock)~~
     <!-- check out http://codemirror.net/mode/toml/index.html -->
     
 <!-- 
