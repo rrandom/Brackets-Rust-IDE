@@ -13,7 +13,7 @@ https://github.com/phildawes/racer
 
 
 #### To-Do
-1. Do not call racer when cursor inside string("").
+1. ~~Do not call racer when cursor inside string("").~~
     <!-- search for codemirror might be helpful, because codemirror could highlight string. and check http://matt.might.net/articles/parsing-bibtex/-->
     
 2. Call racer once a word, not once a character.

@@ -134,12 +134,17 @@ define(function (require, exports, module) {
         };
 
         this.getHints = function (implicitChar) {
-            console.info('Asking Hints');
-
             if (validToken(implicitChar)) {
                 var cursor = cm.getCursor(),
                     txt = cm.getValue();
-                return getHintsD(txt, cursor);
+                var tokenType = cm.getTokenAt(cursor).type;
+
+                if ((tokenType === 'string') || (tokenType === 'comment')) {
+                    return false;
+                } else {
+                    console.info('Asking Hints');
+                    return getHintsD(txt, cursor);
+                }
             } else {
                 return false;
             }
