@@ -73,7 +73,11 @@ define(function (require, exports, module) {
     menu.addMenuItem(RUST_IDE_SETTINGS, "", Menus.AFTER, Commands.FILE_PROJECT_SETTINGS);
 
     //
-    var prefix, $deferred, cm, vpet = 0,
+    var prefix, $deferred, cm,
+        needNewHints = true,
+        cachedHints = null,
+        lastToken,
+        vpet = 0,
         extPath = ExtensionUtils.getModulePath(module);
 
     var endtokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
@@ -123,27 +127,52 @@ define(function (require, exports, module) {
                     selectInitial: true,
                     handleWideResults: false
                 });
+                cachedHints = $deferred;
             }
+        }
+
+        // TO-DO
+        function resolveCachedHint(cachedHints, token) {
+            console.info(token.string);
+            return cachedHints;
         }
 
 
 
         this.hasHints = function (editor, implicitChar) {
             cm = editor._codeMirror;
-            return validToken(implicitChar);
+            if (validToken(implicitChar)) {
+                return true;
+            } else {
+                needNewHints = true;
+                cachedHints = null;
+                return false;
+            }
         };
 
         this.getHints = function (implicitChar) {
             if (validToken(implicitChar)) {
                 var cursor = cm.getCursor(),
                     txt = cm.getValue();
-                var tokenType = cm.getTokenAt(cursor).type;
+
+                lastToken = cm.getTokenAt(cursor);
+                var tokenType = lastToken.type;
 
                 if ((tokenType === 'string') || (tokenType === 'comment')) {
                     return false;
                 } else {
-                    console.info('Asking Hints');
-                    return getHintsD(txt, cursor);
+                    console.info("needNew? " + needNewHints);
+                    console.info("cached? " + cachedHints);
+                    if (needNewHints) {
+                        console.info('Asking Hints');
+                        return getHintsD(txt, cursor);
+                    }
+
+                    if (cachedHints) {
+                        return resolveCachedHint(cachedHints, lastToken);
+
+                    }
+                    return false;
                 }
             } else {
                 return false;
@@ -172,6 +201,7 @@ define(function (require, exports, module) {
                 }
                 console.info('#### On update event, data: ' + data);
                 if (data) {
+                    needNewHints = false;
                     resolveHint(data, petition);
                 } else {
                     console.warn("No matching");
