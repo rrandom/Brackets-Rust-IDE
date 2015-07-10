@@ -121,20 +121,31 @@ define(function (require, exports, module) {
 
         function resolveHint(data, petition) {
             if (petition === vpet) {
+                var formatedHints = formatHints(data);
+                cachedHints = formatedHints;
+                $deferred = new $.Deferred();
                 $deferred.resolve({
-                    hints: formatHints(data),
+                    hints: formatedHints,
                     match: '',
                     selectInitial: true,
                     handleWideResults: false
                 });
-                cachedHints = $deferred;
             }
         }
 
         // TO-DO
         function resolveCachedHint(cachedHints, token) {
             console.info(token.string);
-            return cachedHints;
+            var filteredHints = cachedHints.filter(function (h) {
+                return h.substring(0, token.string.length) === token.string;
+            });
+            console.info("filtered " + JSON.stringify(filteredHints));
+            return $deferred.resolve({
+                hints: filteredHints,
+                match: '',
+                selectInitial: true,
+                handleWideResults: false
+            });
         }
 
 
@@ -162,7 +173,7 @@ define(function (require, exports, module) {
                     return false;
                 } else {
                     console.info("needNew? " + needNewHints);
-                    console.info("cached? " + cachedHints);
+                    console.info("cached? " + JSON.stringify(cachedHints));
                     if (needNewHints) {
                         console.info('Asking Hints');
                         return getHintsD(txt, cursor);
