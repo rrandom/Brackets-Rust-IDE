@@ -17,6 +17,8 @@
 define(function (require, exports, module) {
     'use strict';
 
+    var _ = brackets.getModule("thirdparty/lodash");
+
     var ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         NodeDomain = brackets.getModule('utils/NodeDomain'),
         NodeConnection = brackets.getModule('utils/NodeConnection'),
@@ -73,7 +75,11 @@ define(function (require, exports, module) {
     menu.addMenuItem(RUST_IDE_SETTINGS, "", Menus.AFTER, Commands.FILE_PROJECT_SETTINGS);
 
     //
-    var prefix, $deferred, cm, vpet = 0,
+    var prefix, $deferred, cm,
+        needNewHints = true,
+        cachedHints = null,
+        lastToken,
+        vpet = 0,
         extPath = ExtensionUtils.getModulePath(module);
 
     var endtokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
@@ -109,7 +115,7 @@ define(function (require, exports, module) {
         rs = ta.map(function (i) {
             return (/MATCH ([^,]+),(\d)/.exec(i)[1]);
         });
-        return rs;
+        return _.uniq(rs);
     }
 
 
@@ -117,8 +123,11 @@ define(function (require, exports, module) {
 
         function resolveHint(data, petition) {
             if (petition === vpet) {
+                var formatedHints = formatHints(data);
+                cachedHints = formatedHints;
+                $deferred = new $.Deferred();
                 $deferred.resolve({
-                    hints: formatHints(data),
+                    hints: formatedHints,
                     match: '',
                     selectInitial: true,
                     handleWideResults: false
@@ -126,24 +135,58 @@ define(function (require, exports, module) {
             }
         }
 
+        //
+        function resolveCachedHint(cachedHints, token) {
+            console.info("previous token in cached: " + token.string);
+            var filteredHints = cachedHints.filter(function (h) {
+                return h.substring(0, token.string.length) === token.string;
+            });
+            console.info("filtered " + JSON.stringify(filteredHints));
+            prefix = token.string;
+            return {
+                hints: filteredHints,
+                match: '',
+                selectInitial: true,
+                handleWideResults: false
+            };
+        }
 
 
+        // TO-DO: can't get hint when pressing backspace
         this.hasHints = function (editor, implicitChar) {
             cm = editor._codeMirror;
-            return validToken(implicitChar);
+            if (validToken(implicitChar)) {
+                return true;
+            } else {
+                needNewHints = true;
+                cachedHints = null;
+                return false;
+            }
         };
 
         this.getHints = function (implicitChar) {
             if (validToken(implicitChar)) {
                 var cursor = cm.getCursor(),
                     txt = cm.getValue();
-                var tokenType = cm.getTokenAt(cursor).type;
+
+                lastToken = cm.getTokenAt(cursor);
+                var tokenType = lastToken.type;
 
                 if ((tokenType === 'string') || (tokenType === 'comment')) {
                     return false;
                 } else {
-                    console.info('Asking Hints');
-                    return getHintsD(txt, cursor);
+                    console.info("needNew? " + needNewHints);
+                    console.info("cached? " + JSON.stringify(cachedHints));
+                    if (needNewHints) {
+                        console.info('Asking Hints');
+                        return getHintsD(txt, cursor);
+                    }
+
+                    if (cachedHints) {
+                        return resolveCachedHint(cachedHints, lastToken);
+
+                    }
+                    return false;
                 }
             } else {
                 return false;
@@ -172,6 +215,7 @@ define(function (require, exports, module) {
                 }
                 console.info('#### On update event, data: ' + data);
                 if (data) {
+                    needNewHints = false;
                     resolveHint(data, petition);
                 } else {
                     console.warn("No matching");
