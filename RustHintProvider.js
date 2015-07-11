@@ -17,6 +17,8 @@
 define(function (require, exports, module) {
     'use strict';
 
+    var _ = brackets.getModule("thirdparty/lodash");
+
     var ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         NodeDomain = brackets.getModule('utils/NodeDomain'),
         NodeConnection = brackets.getModule('utils/NodeConnection'),
@@ -113,7 +115,7 @@ define(function (require, exports, module) {
         rs = ta.map(function (i) {
             return (/MATCH ([^,]+),(\d)/.exec(i)[1]);
         });
-        return rs;
+        return _.uniq(rs);
     }
 
 
@@ -133,23 +135,24 @@ define(function (require, exports, module) {
             }
         }
 
-        // TO-DO
+        //
         function resolveCachedHint(cachedHints, token) {
-            console.info(token.string);
+            console.info("previous token in cached: " + token.string);
             var filteredHints = cachedHints.filter(function (h) {
                 return h.substring(0, token.string.length) === token.string;
             });
             console.info("filtered " + JSON.stringify(filteredHints));
-            return $deferred.resolve({
+            prefix = token.string;
+            return {
                 hints: filteredHints,
                 match: '',
                 selectInitial: true,
                 handleWideResults: false
-            });
+            };
         }
 
 
-
+        // TO-DO: can't get hint when pressing backspace
         this.hasHints = function (editor, implicitChar) {
             cm = editor._codeMirror;
             if (validToken(implicitChar)) {
