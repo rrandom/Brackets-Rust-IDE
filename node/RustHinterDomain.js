@@ -41,7 +41,6 @@
         fs = require('fs'),
         extName = '[rust-ide] ';
 
-    // TO-DO: hints cache
     /**
      * @private
      * call outside racer

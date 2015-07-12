@@ -16,7 +16,7 @@ https://github.com/phildawes/racer
 1. ~~Do not call racer when cursor inside string("").~~
     <!-- search for codemirror might be helpful, because codemirror could highlight string. and check http://matt.might.net/articles/parsing-bibtex/-->
     
-2. Call racer once a word, not once a character.
+2. ~~Call racer once a word, not once a character.~~
     <!-- maybe need a variable to track current word -->
 
 3. Add syntax words hint like ``fn, use, match``.

@@ -96,7 +96,6 @@ define(function (require, exports, module) {
 
     function getHintsD(txt, cursor) {
         $deferred = new $.Deferred();
-        console.info('Call RustHinterDomain');
         RustHinterDomain.exec("getHint", prefs.get("racerPath"), txt, (cursor.line + 1), cursor.ch, extPath, ++vpet)
             .fail(function (err) {
                 console.error('[RustHinterDomain] Fail to get hints: ', err);
@@ -136,12 +135,10 @@ define(function (require, exports, module) {
 
         //
         function resolveCachedHint(cachedHints, token) {
-            console.info("previous token in cached: " + token.string);
-            var filteredHints = cachedHints.filter(function (h) {
-                return h.substring(0, token.string.length) === token.string;
-            });
-            console.info("filtered " + JSON.stringify(filteredHints));
             prefix = token.string;
+            var filteredHints = cachedHints.filter(function (h) {
+                return h.substring(0, prefix.length) === prefix;
+            });
             return {
                 hints: filteredHints,
                 match: '',
@@ -173,11 +170,6 @@ define(function (require, exports, module) {
                 if ((tokenType === 'string') || (tokenType === 'comment')) {
                     return false;
                 } else {
-                    console.info("needNew? " + needNewHints);
-                    console.info("cached? " + JSON.stringify(cachedHints));
-
-                    console.info("previous Token: " + previousTokenStr);
-
                     if ((needNewHints) || (previousTokenStr[0] !== lastToken.string[0])) {
                         console.info('Asking Hints');
                         needNewHints = true;
