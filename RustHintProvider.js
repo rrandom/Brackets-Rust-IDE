@@ -78,6 +78,7 @@ define(function (require, exports, module) {
     var prefix, $deferred, cm,
         needNewHints = true,
         cachedHints = null,
+        previousTokenStr = "--dummy--",
         lastToken,
         vpet = 0,
         extPath = ExtensionUtils.getModulePath(module);
@@ -101,7 +102,6 @@ define(function (require, exports, module) {
                 console.error('[RustHinterDomain] Fail to get hints: ', err);
             });
         return $deferred;
-
     }
 
     function formatHints(data) {
@@ -125,7 +125,6 @@ define(function (require, exports, module) {
             if (petition === vpet) {
                 var formatedHints = formatHints(data);
                 cachedHints = formatedHints;
-                $deferred = new $.Deferred();
                 $deferred.resolve({
                     hints: formatedHints,
                     match: '',
@@ -152,7 +151,6 @@ define(function (require, exports, module) {
         }
 
 
-        // TO-DO: can't get hint when pressing backspace
         this.hasHints = function (editor, implicitChar) {
             cm = editor._codeMirror;
             if (validToken(implicitChar)) {
@@ -177,8 +175,14 @@ define(function (require, exports, module) {
                 } else {
                     console.info("needNew? " + needNewHints);
                     console.info("cached? " + JSON.stringify(cachedHints));
-                    if (needNewHints) {
+
+                    console.info("previous Token: " + previousTokenStr);
+
+                    if ((needNewHints) || (previousTokenStr[0] !== lastToken.string[0])) {
                         console.info('Asking Hints');
+                        needNewHints = true;
+                        cachedHints = null;
+                        previousTokenStr = lastToken.string;
                         return getHintsD(txt, cursor);
                     }
 
