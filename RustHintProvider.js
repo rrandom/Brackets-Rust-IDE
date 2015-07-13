@@ -74,6 +74,7 @@ define(function (require, exports, module) {
     var menu = Menus.getMenu(Menus.AppMenuBar.FILE_MENU);
     menu.addMenuItem(RUST_IDE_SETTINGS, "", Menus.AFTER, Commands.FILE_PROJECT_SETTINGS);
 
+
     //
     var prefix, $deferred, cm,
         needNewHints = true,
@@ -83,12 +84,12 @@ define(function (require, exports, module) {
         vpet = 0,
         extPath = ExtensionUtils.getModulePath(module);
 
-    var endtokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
+    var end_tokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
 
     function validToken(implicitChar) {
         if (implicitChar) {
             var code = implicitChar.charCodeAt(0);
-            return (endtokens.indexOf(implicitChar) === -1) && (code !== 13) && (code !== 9);
+            return (end_tokens.indexOf(implicitChar) === -1) && (code !== 13) && (code !== 9);
         } else {
             return false;
         }
@@ -103,7 +104,7 @@ define(function (require, exports, module) {
         return $deferred;
     }
 
-    function formatHints(data) {
+    function extractHints(data) {
         var i, t,
             rs = [],
             ta = data.split('\n');
@@ -117,12 +118,21 @@ define(function (require, exports, module) {
         return _.uniq(rs);
     }
 
+    // keywords: https://doc.rust-lang.org/grammar.html#keywords
+    var rust_keywords = ["abstract", "alignof", "as", "become", "box", "break",
+                         "const", "continue", "crate", "do", "else", "enum",
+                         "extern", "false", "final", "fn", "for", "if", "impl",
+                         "in", "let", "loop", "macro", "match", "mod", "move",
+                         "mut", "offsetof", "override", "priv", "proc", "pub",
+                         "pure", "ref", "return", "Self", "self", "sizeof", "static",
+                         "struct", "super", "trait", "true", "type", "typeof", "unsafe",
+                         "unsized", "use", "virtual", "where", "while", "yield"];
 
     function RustHintProvider() {
 
         function resolveHint(data, petition) {
             if (petition === vpet) {
-                var formatedHints = formatHints(data);
+                var formatedHints = extractHints(data);
                 cachedHints = formatedHints;
                 $deferred.resolve({
                     hints: formatedHints,
@@ -133,9 +143,10 @@ define(function (require, exports, module) {
             }
         }
 
-        //
+        // TO-DO: Keywords hints only added in cachedhint
         function resolveCachedHint(cachedHints, token) {
             prefix = token.string;
+            cachedHints = cachedHints.concat(rust_keywords);
             var filteredHints = cachedHints.filter(function (h) {
                 return h.substring(0, prefix.length) === prefix;
             });
