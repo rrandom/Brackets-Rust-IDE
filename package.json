@@ -1,14 +1,14 @@
 {
-    "name": "rrandom.rust-ide",
-    "title": "Rust IDE",
-    "description": "Help coding Rust in Brackets, autocomplete, syntax highlight",
-    "homepage": "https://github.com/rrandom/Brackets-Rust-IDE",
-    "version": "1.0.1",
-    "author": "Rrandom <emannonhere@gmail.com> (https://github.com/rrandom)",
-    "license": "MIT",
-    "categories": "language",
-    "engines": {
-        "brackets": ">=0.24.0"
-    },
-    "keywords": ["Rust", "IDE", "language"]
+	"name": "rrandom.rust-ide",
+	"title": "Rust IDE",
+	"description": "Help coding Rust in Brackets, autocomplete, syntax highlight",
+	"homepage": "https://github.com/rrandom/Brackets-Rust-IDE",
+	"version": "1.0.2",
+	"author": "Rrandom <emannonhere@gmail.com> (https://github.com/rrandom)",
+	"license": "MIT",
+	"categories": "language",
+	"engines": {
+		"brackets": ">=0.24.0"
+	},
+	"keywords": ["Rust", "IDE", "language"]
 }
