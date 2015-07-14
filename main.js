@@ -195,7 +195,7 @@ define(function (require, exports, module) {
 			CodeHintManager.registerHintProvider(rustHintProvider, ["rust"], 10);
 			console.info('Registered Rust Hint Provider');
 		} catch (e) {
-			console.error("Error starting up go hint provider", e);
+			console.error("Error starting up Rust hint provider", e);
 			setTimeout(startup, 100);
 		}
 	}
