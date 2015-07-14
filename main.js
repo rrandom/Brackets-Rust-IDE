@@ -41,6 +41,7 @@ define(function (require, exports, module) {
     var LanguageManager = brackets.getModule('language/LanguageManager');
 
     var CodeHintManager = brackets.getModule("editor/CodeHintManager"),
+        ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
         RustHintProvider = require("RustHintProvider");
 
 
@@ -188,6 +189,7 @@ define(function (require, exports, module) {
     // ------------------------------ CODE HINTS ---------------------------
     function startup() {
         try {
+            ExtensionUtils.loadStyleSheet(module, "css/main.css");
             var rustHintProvider = new RustHintProvider();
             console.info('Registering Rust Hint Provider');
             CodeHintManager.registerHintProvider(rustHintProvider, ["rust"], 1);

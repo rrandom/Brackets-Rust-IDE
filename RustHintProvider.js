@@ -132,10 +132,10 @@ define(function (require, exports, module) {
 
         function resolveHint(data, petition) {
             if (petition === vpet) {
-                var formatedHints = extractHints(data);
-                cachedHints = formatedHints;
+                var racerHintsList = extractHints(data);
+                cachedHints = racerHintsList;
                 $deferred.resolve({
-                    hints: formatedHints,
+                    hints: racerHintsList,
                     match: '',
                     selectInitial: true,
                     handleWideResults: false
@@ -146,10 +146,21 @@ define(function (require, exports, module) {
         // TO-DO: Keywords hints only added in cachedhint
         function resolveCachedHint(cachedHints, token) {
             prefix = token.string;
-            cachedHints = cachedHints.concat(rust_keywords);
-            var filteredHints = cachedHints.filter(function (h) {
+
+            var hintsList = cachedHints.concat(rust_keywords);
+            var filteredHints = hintsList.filter(function (h) {
                 return h.substring(0, prefix.length) === prefix;
+            }).map(function (h) {
+                if (_.contains(rust_keywords, h)) {
+                    var $fHint = $('<span>')
+                        .addClass("RustIDE-hints-keywords")
+                        .text(h);
+                    return $fHint;
+                } else {
+                    return h;
+                }
             });
+
             return {
                 hints: filteredHints,
                 match: '',
