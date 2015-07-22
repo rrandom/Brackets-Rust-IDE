@@ -1,4 +1,4 @@
-# Change log
+# Change Log
 
 ## 1.0.2 - 2015-7-14
 

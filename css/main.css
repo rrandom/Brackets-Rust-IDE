@@ -1,7 +1,11 @@
 .RustIDE-hints-keywords {
-	color: rgb(200, 0, 164);
+	color: #c800a4;
+}
+
+.RustIDE-hints-macros {
+	color: #3E999F;
 }
 
 .RustIDE-hints-fn {
-	color: rgb(255, 255, 255);
+	color: #fff;
 }

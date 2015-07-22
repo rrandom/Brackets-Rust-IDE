@@ -126,6 +126,15 @@ define(function (require, exports, module) {
                          "struct", "super", "trait", "true", "type", "typeof", "unsafe",
                          "unsized", "use", "virtual", "where", "while", "yield"];
 
+	// std library macros: https://doc.rust-lang.org/nightly/std/index.html#macros
+	var std_macros = ["assert!", "assert_eq!", "cfg!", "column!", "concat!",
+					  "contat_idents!", "debug_assert!", "debug_assert_eq!",
+					  "env!", "file!", "format!", "format_args!", "include!",
+					  "include_bytes!", "include_str!", "line!", "module_path!",
+					  "option_env!", "panic!", "print!", "println!", "scoped_thread_local!",
+					  "select!", "stringify!", "thread_local!", "try!", "unimplemented!",
+					  "unreachable!", "vec!", "write!", "writeln!"];
+
 	function RustHintProvider() {
 
 		function resolveHint(data, petition) {
@@ -138,7 +147,7 @@ define(function (require, exports, module) {
 		function resolveCachedHint(cachedHints, token) {
 			prefix = token.string;
 
-			var hintsList = cachedHints.concat(rust_keywords);
+			var hintsList = cachedHints.concat(rust_keywords, std_macros);
 			var filteredHints = hintsList.filter(function (h) {
 				return h.substring(0, prefix.length) === prefix;
 			}).map(function (h) {
@@ -147,6 +156,10 @@ define(function (require, exports, module) {
 						.addClass("RustIDE-hints-keywords")
 						.text(h);
 
+				} else if (_.contains(std_macros, h)) {
+					return $('<span>')
+						.addClass("RustIDE-hints-macros")
+						.text(h);
 				} else {
 					return $('<span>')
 						.addClass("RustIDE-hints-fn")
