@@ -44,6 +44,11 @@ define(function (require, exports, module) {
 		ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
 		RustHintProvider = require("RustHintProvider");
 
+	// Since brackets 1.4 will enable defineSimpleMode of CodeMirror, and the CodeMirror
+	// rust.js is old, I write a new rust.js with defineSimpleMode, this line will be deleted
+	// when the new version of brackets or the new version of codemirror release.
+	var CodeMirrorModeRust = require("rust");
+
 
 	// ------------------------- SYNTAX HIGHTLIGHTER -----------------------
 	LanguageManager.defineLanguage('rust', {
