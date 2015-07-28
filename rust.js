@@ -13,7 +13,7 @@
 "use strict";
 */
 
-// string should be another state
+// fold in simpleMode?
  define(function (require, exports, module){
  "use strict";
 	require("simple");
@@ -22,7 +22,7 @@
 		start:[
 			{regex: /r?"(?:[^\\]|\\.)*?"/, token: "string"},
 			// raw string with #
-			{regex: /r#"(?:[^\\]|\\.)*?"#/, token: "string"},
+			//{regex: /r#"(?:[^\\]|\\.)*?"#/, token: "string"},
 			// character
 			{regex: /'(?:[^'\\]|\\(?:[nrt0'"]|x[\da-fA-F]{2}|u\{[\da-fA-F]{6}\}))'/, token: "string-2"},
 			// byte
@@ -44,7 +44,10 @@
 			{regex:/\b(fn)(\s+)([a-zA-Z_][a-zA-Z0-9_]*)/,
 			 token: ["keyword", null ,"def"]
 			},
+			{regex: /#!?\[.*\]/, token: "attribute"},
 			{regex: /\/\/.*/, token: "comment"},
+			{regex: /\/\*/, token: "comment", next: "comment"},
+			{regex: /[-+\/*=<>!]+/, token: "operator"},
 			{regex: /[a-zA-Z_]\w*!/,token: "rust.variable-3"},
 			{regex: /[a-zA-Z_]\w*/, token: "variable"},
 			{regex: /[\{\[\(]/, indent: true},
