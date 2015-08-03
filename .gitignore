@@ -6,4 +6,4 @@
 
 *.zip
 tmp.racertmp
-tmp.js
+tmp*
