@@ -7,9 +7,6 @@
 }
 
 .RustIDE-hints-fn {
-	color: #fff;
+	color: #000;
 }
 
-span.cm-rust.cm-variable-3 {
-	color: #3E999F !important;
-}
