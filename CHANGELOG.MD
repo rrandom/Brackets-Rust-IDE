@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.0.4 - 2015-8-12
+
+### Added
+ - Update hint coloring scheme.
+ - Update rust hightlighting scheme from CodeMirror.
+ - Some small issues
+
 ## 1.0.3 - 2015-7-23
 
 ### Added
