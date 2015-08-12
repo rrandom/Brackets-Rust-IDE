@@ -1,12 +1,36 @@
-.RustIDE-hints-keywords {
-	color: #c800a4;
+/* this coloring scheme from https://github.com/mackenza/Brackets-PHP-SmartHints */
+
+.RustIDE-hints {
+	padding-left: 22px;
+	position: relative;
 }
 
-.RustIDE-hints-macros {
-	color: #3E999F;
+.RustIDE-hints-keywords:before {
+	content: "K";
+	background-color: #c800a4;
 }
 
-.RustIDE-hints-fn {
-	color: #000;
+.RustIDE-hints-macros:before {
+	content: "M";
+	background-color: #3E999F;
 }
 
+.RustIDE-hints-fn:before {
+	content: "R";
+	background-color: #000
+}
+
+.RustIDE-hints:before {
+	position: absolute;
+	left: 2px;
+	bottom: 2px;
+	border-radius: 50%;
+	font-size: 12px;
+	font-weight: bold;
+	height: 15px;
+	width: 15px;
+	line-height: 16px;
+	text-align: center;
+	color: white;
+	box-sizing: border-box;
+}

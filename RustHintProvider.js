@@ -152,16 +152,16 @@ define(function (require, exports, module) {
 				return h.substring(0, prefix.length) === prefix;
 			}).map(function (h) {
 				if (_.contains(rust_keywords, h)) {
-					return $('<span>')
+					return $('<span>').addClass("RustIDE-hints")
 						.addClass("RustIDE-hints-keywords")
 						.text(h);
 
 				} else if (_.contains(std_macros, h)) {
-					return $('<span>')
+					return $('<span>').addClass("RustIDE-hints")
 						.addClass("RustIDE-hints-macros")
 						.text(h);
 				} else {
-					return $('<span>')
+					return $('<span>').addClass("RustIDE-hints")
 						.addClass("RustIDE-hints-fn")
 						.text(h);
 				}
