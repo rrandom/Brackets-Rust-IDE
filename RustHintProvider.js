@@ -196,7 +196,7 @@ define(function (require, exports, module) {
 			//implicitChar is null when press Backspace
 			if (validToken(implicitChar) || validToken(lastToken.string)) {
 				var tokenType = lastToken.type;
-				if ((tokenType === 'string') || (tokenType === 'comment')) {
+				if (['string', 'comment', 'meta', 'def'].indexOf(tokenType) > -1) {
 					return false;
 				} else {
 					if ((needNewHints) || (previousTokenStr[0] !== lastToken.string[0])) {
