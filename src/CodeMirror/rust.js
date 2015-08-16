@@ -15,7 +15,7 @@
 
  define(function (require, exports, module){
  "use strict";
-	require("simple");
+	require("src/CodeMirror/simple");
 
 CodeMirror.defineSimpleMode("rust",{
   start:[

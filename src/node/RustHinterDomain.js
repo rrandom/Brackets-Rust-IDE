@@ -37,7 +37,6 @@
 
     var _domainManager,
         spawn = require('child_process').spawn,
-        exec = require('child_process').exec,
         fs = require('fs'),
         extName = '[rust-ide] ';
 

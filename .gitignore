@@ -5,5 +5,5 @@
 /node_modules/
 
 *.zip
-tmp.racertmp
 tmp*
+hello.rs

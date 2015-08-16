@@ -56,8 +56,6 @@ define(function (require, exports, module) {
      * Tracks dirty documents between invocations of findMatchingFunctions.
      * @type {ChangedDocumentTracker}
      */
-    // does not need now
-    //var _changedDocumentTracker = new ChangedDocumentTracker();
 
     /**
      * Function matching regular expression. Recognizes the forms:
