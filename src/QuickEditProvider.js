@@ -31,7 +31,7 @@ define(function (require, exports, module) {
     var EditorManager = brackets.getModule("editor/EditorManager");
 
 
-    function RustDefinitionProvider(hostEditor, pos){
+    function RustDefinitionProvider(hostEditor, pos) {
         console.log("Call find def --> ");
         console.log('hostEditor.getModeForSelection():', hostEditor.getModeForSelection());
         if (hostEditor.getModeForSelection() !== "text/x-rustsrc") {

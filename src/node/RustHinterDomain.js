@@ -101,8 +101,8 @@
             });
 
             racer.on('close', function (code) {
-				console.log("cmd find def: \n");
-				console.log(tmp);
+                console.log("cmd find def: \n");
+                console.log(tmp);
                 _domainManager.emitEvent('RustHinter', 'defFind', [tmp, petition]);
             });
 
