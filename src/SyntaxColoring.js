@@ -9,20 +9,4 @@ define(function (require, exports, module) {
 	// when the new version of brackets or the new version of codemirror release.
 	require("src/CodeMirror/rust");
 
-	var LanguageManager = brackets.getModule('language/LanguageManager');
-
-	LanguageManager.defineLanguage('rust', {
-		name: 'Rust',
-		mode: ["rust", "text/x-rustsrc"],
-		fileExtensions: ['rs'],
-		blockComment: ['/*', '*/'],
-		lineComment: ['//']
-	});
-
-	LanguageManager.defineLanguage('toml', {
-		name: 'toml',
-		mode: ["toml", "text/x-toml"],
-		fileExtensions: ['toml'],
-		lineComment: ['#']
-	});
 });

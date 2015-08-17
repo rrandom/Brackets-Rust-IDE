@@ -37,8 +37,6 @@ define(function (require, exports, module) {
     "use strict";
 
     var _ = brackets.getModule("thirdparty/lodash");
-    //console.log(_);
-
 
     // Load brackets modules
     var CodeMirror = brackets.getModule("thirdparty/CodeMirror2/lib/codemirror"),

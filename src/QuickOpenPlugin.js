@@ -4,7 +4,6 @@
 define(function (require, exports, module) {
 	"use strict";
 	var EditorManager = brackets.getModule("editor/EditorManager"),
-		QuickOpen = brackets.getModule("search/QuickOpen"),
 		DocumentManager = brackets.getModule("document/DocumentManager"),
 		StringMatch = brackets.getModule("utils/StringMatch");
 
@@ -120,13 +119,8 @@ define(function (require, exports, module) {
 	}
 
 
-	QuickOpen.addQuickOpenPlugin({
-		name: "Rust functions",
-		languageIds: ["rust"],
-		search: search,
-		match: match,
-		itemFocus: itemFocus,
-		itemSelect: itemSelect
-
-	});
+	exports.search = search;
+	exports.match = match;
+	exports.itemFocus = itemFocus;
+	exports.itemSelect = itemSelect;
 });

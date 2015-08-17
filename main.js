@@ -30,15 +30,41 @@ define(function (require, exports, module) {
 	var AppInit = brackets.getModule("utils/AppInit");
 
 	var CodeHintManager = brackets.getModule("editor/CodeHintManager"),
-		ExtensionUtils = brackets.getModule("utils/ExtensionUtils");
+		ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
+		QuickOpen = brackets.getModule("search/QuickOpen"),
+		LanguageManager = brackets.getModule('language/LanguageManager');
 
 	var RacerSettings = require("src/dialogs/RacerSettings"),
 		RustHintProvider = require("src/RustHintProvider"),
-		QuickOpen = require("src/QuickOpen"),
-		LanguageHight = require("src/Highter");
+		QuickOpenPlugin = require("src/QuickOpenPlugin"),
+		SyntaxColoring = require("src/SyntaxColoring");
 
 	function startup() {
 		try {
+			QuickOpen.addQuickOpenPlugin({
+				name: "Rust functions",
+				languageIds: ["rust"],
+				search: QuickOpenPlugin.search,
+				match: QuickOpenPlugin.match,
+				itemFocus: QuickOpenPlugin.itemFocus,
+				itemSelect: QuickOpenPlugin.itemSelect
+			});
+
+			LanguageManager.defineLanguage('rust', {
+				name: 'Rust',
+				mode: ["rust", "text/x-rustsrc"],
+				fileExtensions: ['rs'],
+				blockComment: ['/*', '*/'],
+				lineComment: ['//']
+			});
+
+			LanguageManager.defineLanguage('toml', {
+				name: 'toml',
+				mode: ["toml", "text/x-toml"],
+				fileExtensions: ['toml'],
+				lineComment: ['#']
+			});
+
 			ExtensionUtils.loadStyleSheet(module, "styles/main.css");
 			var rustHintProvider = new RustHintProvider();
 			console.info('Registering Rust Hint Provider');
