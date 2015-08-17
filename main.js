@@ -39,6 +39,8 @@ define(function (require, exports, module) {
 		QuickOpenPlugin = require("src/QuickOpenPlugin"),
 		SyntaxColoring = require("src/SyntaxColoring");
 
+    var QuickEdit = require("src/QuickEditProvider");
+
 	function startup() {
 		try {
 			QuickOpen.addQuickOpenPlugin({

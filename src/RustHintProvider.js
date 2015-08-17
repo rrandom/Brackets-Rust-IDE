@@ -217,6 +217,111 @@ define(function (require, exports, module) {
 		});
 	}
 
+
+
+
+
+
+	// ----------------------------------------------------------------------
+	// ----------------------------------------------------------------------
+
+	var MultiRangeInlineEditor = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
+		EditorManager = brackets.getModule("editor/EditorManager"),
+		DocumentManager = brackets.getModule("document/DocumentManager");
+
+	var $deferred;
+
+	function getDefD(txt, pos) {
+		$deferred = new $.Deferred();
+		RustHinterDomain.exec("findDef", prefs.get("racerPath"), txt, (pos.line + 1), pos.ch, extPath, ++vpet)
+			.fail(function (err) {
+				console.error('[RustHinterDomain] Fail to get Def: ', err);
+			});
+		return $deferred;
+	}
+
+	function resolveDef(data) {
+		console.log("def find: ", data);
+		try {
+			data = data.split('\n');
+			data = data[0].split(',');
+			var name = data[0],
+				path = data[3].split('\\').join('/');
+
+			console.log('path:', path);
+
+			var doc = DocumentManager.getDocumentForPath(path),
+				lineStart = Number(data[1]),
+				lineEnd = lineStart + 10;
+
+			console.log('doc:', doc);
+
+			var ranges = [{
+                document:   doc,
+                name:       name,
+                lineStart:  lineStart,
+                lineEnd:    lineEnd
+			}];
+
+			console.dir('ranges:', ranges[0].name);
+
+			var rustInlineEditor = new MultiRangeInlineEditor(ranges);
+
+			console.log("under inline ");
+
+			console.dir('rustInlineEditor:', rustInlineEditor);
+
+			$deferred.resolve(rustInlineEditor);
+		} catch (e) {
+			console.error("error of get def", e);
+		}
+	}
+
+	function RustDefinitionProvider(hostEditor, pos) {
+		console.log("Call find def --> ");
+		console.log('hostEditor.getModeForSelection():', hostEditor.getModeForSelection());
+		if (hostEditor.getModeForSelection() !== "text/x-rustsrc") {
+			return null;
+		}
+
+		var sel = hostEditor.getSelection();
+		console.dir('sel:', sel);
+		if (sel.start.line !== sel.end.line) {
+			return null;
+		}
+
+		// may change to not use codemirror api
+		var txt = hostEditor._codeMirror.getValue();
+		console.log('txt:', txt);
+		console.log('sel.start:', sel.start);
+
+		$(nodeConnection).on("RustHinter:defFind", function (evt, data, petition) {
+			if (data === 'PANIC PANIC PANIC\n') {
+				data = '';
+			}
+			console.info('#### On defFind event, data: ' + data);
+			if (data) {
+				resolveDef(data, petition);
+			} else {
+				console.warn("No matching");
+			}
+		});
+
+		return getDefD(txt, sel.start);
+		/*
+		var functionResult = _getFunctionName(hostEditor, sel.start);
+		if (!functionResult.functionName) {
+		    return functionResult.reason || null;
+		}
+
+		return _createInlineEditor(hostEditor, functionResult.functionName);
+		*/
+
+	}
+
+	EditorManager.registerInlineEditProvider(RustDefinitionProvider);
+
+
 	return RustHintProvider;
 
 });

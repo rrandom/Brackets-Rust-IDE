@@ -81,6 +81,39 @@
         }
     }
 
+    function cmdFindDefinition(racerPath, txt, linenum, charnum, path, petition) {
+        console.log("cmdFindDef -->");
+        try {
+
+            var theTmpFile = path + 'tmp.racertmp';
+            fs.writeFileSync(theTmpFile, txt);
+
+            var racer = spawn(racerPath, ['find-definition', linenum, charnum, theTmpFile]);
+
+            var tmp = '';
+
+            racer.stdout.on('data', function (data) {
+                tmp += data.toString();
+            });
+
+            racer.stderr.on('data', function (data) {
+                console.info(extName + 'stderr: ' + data);
+            });
+
+            racer.on('close', function (code) {
+				console.log("cmd find def: \n");
+				console.log(tmp);
+                _domainManager.emitEvent('RustHinter', 'defFind', [tmp, petition]);
+            });
+
+            racer.unref();
+
+
+        } catch (e) {
+            console.error(extName + e);
+        }
+    }
+
     /**
      * Initializes the domain.
      * @param {DomainManager} domainManager The DomainManager for the server
@@ -131,6 +164,56 @@
                     description: "petition number"
                 }
             ], []
+        );
+
+        domainManager.registerCommand(
+            "RustHinter",
+            "findDef",
+            cmdFindDefinition,
+            false,
+            "Return found definitions", [
+                {
+                    name: "racerPath",
+                    type: "string",
+                    description: "absolute path to racer"
+                },
+                {
+                    name: "txt",
+                    type: "string",
+                    description: "current editing file"
+                },
+                {
+                    name: "linenum",
+                    type: "number",
+                    description: "line number"
+                },
+                {
+                    name: "charnum",
+                    type: "number",
+                    description: "character number"
+                },
+                {
+                    name: "path",
+                    type: "string",
+                    description: "extension path"
+                },
+                {
+                    name: "petition",
+                    type: "number",
+                    description: "petition number"
+                }
+            ], []
+        );
+
+        domainManager.registerEvent(
+            "RustHinter",
+            "defFind", [{
+                name: "data",
+                type: "string"
+            }, {
+                name: "petition",
+                type: "number"
+            }]
         );
 
         domainManager.registerEvent(
