@@ -240,41 +240,45 @@ define(function (require, exports, module) {
 		return $deferred;
 	}
 
-	function resolveDef(data) {
+	function resolveDef(data, hostEditor) {
 		console.log("def find: ", data);
-		try {
-			data = data.split('\n');
-			data = data[0].split(',');
-			var name = data[0],
-				path = data[3].split('\\').join('/');
+		//try {
+		data = data.split('\n');
+		data = data[0].split(',');
+		var name = data[0],
+			path = data[3].split('\\').join('/');
 
-			console.log('path:', path);
+		console.log('path:', path);
 
-			var doc = DocumentManager.getDocumentForPath(path),
-				lineStart = Number(data[1]),
+
+		DocumentManager.getDocumentForPath(path).done(function (doc) {
+
+			var lineStart = Number(data[1]),
 				lineEnd = lineStart + 10;
 
-			console.log('doc:', doc);
+			console.dir('doc:\n', doc);
 
 			var ranges = [{
-                document:   doc,
-                name:       name,
-                lineStart:  lineStart,
-                lineEnd:    lineEnd
+				document: doc,
+				name: name,
+				lineStart: lineStart-1,
+				lineEnd: lineEnd
 			}];
 
-			console.dir('ranges:', ranges[0].name);
+			console.dir('ranges:', ranges);
+			try {
+				var rustInlineEditor = new MultiRangeInlineEditor(ranges);
+				rustInlineEditor.load(hostEditor);
 
-			var rustInlineEditor = new MultiRangeInlineEditor(ranges);
+				console.log("under inline");
 
-			console.log("under inline ");
+				console.dir('rustInlineEditor:', rustInlineEditor);
 
-			console.dir('rustInlineEditor:', rustInlineEditor);
-
-			$deferred.resolve(rustInlineEditor);
-		} catch (e) {
-			console.error("error of get def", e);
-		}
+				$deferred.resolve(rustInlineEditor);
+			} catch (e) {
+				console.error("error of get def", e);
+			}
+		});
 	}
 
 	function RustDefinitionProvider(hostEditor, pos) {
@@ -301,7 +305,7 @@ define(function (require, exports, module) {
 			}
 			console.info('#### On defFind event, data: ' + data);
 			if (data) {
-				resolveDef(data, petition);
+				resolveDef(data, hostEditor);
 			} else {
 				console.warn("No matching");
 			}
