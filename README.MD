@@ -9,3 +9,11 @@ https://github.com/phildawes/racer
 
 #### Screenshot
 ![Rust-IDE](https://raw.githubusercontent.com/rrandom/Brackets-Rust-IDE/master/images/screenshot.png)
+
+
+#### TO-DO
+
+quick-edit
+1. Compute offset to get function line end
+2. Diffiate different types `module, trait, strust...`.
+3. open local file;
