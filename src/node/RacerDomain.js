@@ -23,7 +23,6 @@
 
 
 /*
- * Docs to finish this file:
  * https://github.com/adobe/brackets/wiki/Brackets-Node-Process:-Overview-for-Developers
  * https://nodejs.org/api/child_process.html
  */
@@ -31,104 +30,70 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50,node: true */
 /*global define, $, brackets */
 
+
 (function () {
     "use strict";
 
-
     var _domainManager,
-        spawn = require('child_process').spawn,
+        Child_process = require('child_process'),
         fs = require('fs'),
-        extName = '[rust-ide] ';
+        domainName = 'RacerDomain',
+        extName = '[rust-ide]';
 
-    /**
-     * @private
-     * call outside racer
-     * @param racerPath {string}
-     * @param txt {string} current edit buffer
-     * @param linenum {number}
-     * @param charnum {number}
-     * @param path {string} extension buffer
-     * @param petition {number}
-     */
-    function cmdGetHint(racerPath, txt, linenum, charnum, path, petition) {
-        //console.info('cmdGetHint --> ');
+
+    // args: {txt, line, char, path, command, event}
+    function racerCli(racerPath, args, petition) {
         try {
+            var tmpFile = args.path + 'tmp.racertmp',
+                output = '';
+            fs.writeFileSync(tmpFile, args.txt);
 
-            var theTmpFile = path + 'tmp.racertmp';
-            fs.writeFileSync(theTmpFile, txt);
-
-            var racer = spawn(racerPath, ['complete', linenum, charnum, theTmpFile]);
-
-            var tmp = '';
+            var racer = Child_process.spawn(
+                racerPath, [args.command, args.line, args.char, tmpFile]
+            );
 
             racer.stdout.on('data', function (data) {
-                tmp += data.toString();
+                output += data.toString();
             });
 
-            racer.stderr.on('data', function (data) {
-                console.info(extName + 'stderr: ' + data);
+            racer.stderr.on('data', function (e) {
+                console.info(extName + 'stderr: ' + e);
             });
 
             racer.on('close', function (code) {
-                _domainManager.emitEvent('RustHinter', 'update', [tmp, petition]);
+                _domainManager.emitEvent(domainName, args.event, [output, petition]);
             });
 
             racer.unref();
-
-
         } catch (e) {
             console.error(extName + e);
         }
     }
 
-    function cmdFindDefinition(racerPath, txt, linenum, charnum, path, petition) {
-        console.log("cmdFindDef -->");
-        try {
-
-            var theTmpFile = path + 'tmp.racertmp';
-            fs.writeFileSync(theTmpFile, txt);
-
-            var racer = spawn(racerPath, ['find-definition', linenum, charnum, theTmpFile]);
-
-            var tmp = '';
-
-            racer.stdout.on('data', function (data) {
-                tmp += data.toString();
-            });
-
-            racer.stderr.on('data', function (data) {
-                console.info(extName + 'stderr: ' + data);
-            });
-
-            racer.on('close', function (code) {
-                console.log("cmd find def: \n");
-                console.log(tmp);
-                _domainManager.emitEvent('RustHinter', 'defFind', [tmp, petition]);
-            });
-
-            racer.unref();
-
-
-        } catch (e) {
-            console.error(extName + e);
-        }
+    // args: {txt, line, char, path}
+    function cmdGetHint(racerPath, args, petition) {
+        args.command = 'complete';
+        args.event = 'hintUpdate';
+        racerCli(racerPath, args, petition);
     }
 
-    /**
-     * Initializes the domain.
-     * @param {DomainManager} domainManager The DomainManager for the server
-     */
+    function cmdFindDefinition(racerPath, args, petition) {
+        args.command = 'find-definition';
+        args.event = 'defFound';
+        racerCli(racerPath, args, petition);
+    }
+
     function init(domainManager) {
         console.info('Rust NodeDomain init');
-        if (!domainManager.hasDomain("RustHinter")) {
-            domainManager.registerDomain("RustHinter", {
+        if (!domainManager.hasDomain(domainName)) {
+            domainManager.registerDomain(domainName, {
                 major: 0,
                 minor: 1
             });
         }
 
         domainManager.registerCommand(
-            "RustHinter", // domain name
+            domainName, // domain name
             "getHint", // command name
             cmdGetHint, // command handler function
             false, // asynchronous
@@ -139,24 +104,9 @@
                     description: "absolute path to racer"
                 },
                 {
-                    name: "txt",
-                    type: "string",
-                    description: "current editing file"
-                },
-                {
-                    name: "linenum",
-                    type: "number",
-                    description: "line number"
-                },
-                {
-                    name: "charnum",
-                    type: "number",
-                    description: "character number"
-                },
-                {
-                    name: "path",
-                    type: "string",
-                    description: "extension path"
+                    name: "args",
+                    type: "object",
+                    description: "{txt, line, char, path}"
                 },
                 {
                     name: "petition",
@@ -167,7 +117,7 @@
         );
 
         domainManager.registerCommand(
-            "RustHinter",
+            domainName,
             "findDef",
             cmdFindDefinition,
             false,
@@ -178,24 +128,9 @@
                     description: "absolute path to racer"
                 },
                 {
-                    name: "txt",
-                    type: "string",
-                    description: "current editing file"
-                },
-                {
-                    name: "linenum",
-                    type: "number",
-                    description: "line number"
-                },
-                {
-                    name: "charnum",
-                    type: "number",
-                    description: "character number"
-                },
-                {
-                    name: "path",
-                    type: "string",
-                    description: "extension path"
+                    name: "args",
+                    type: "object",
+                    description: "{txt, line, char, path}"
                 },
                 {
                     name: "petition",
@@ -206,8 +141,8 @@
         );
 
         domainManager.registerEvent(
-            "RustHinter",
-            "defFind", [{
+            domainName,
+            "defFound", [{
                 name: "data",
                 type: "string"
             }, {
@@ -215,10 +150,9 @@
                 type: "number"
             }]
         );
-
         domainManager.registerEvent(
-            "RustHinter",
-            "update", [{
+            domainName,
+            "hintUpdate", [{
                 name: "data",
                 type: "string"
             }, {

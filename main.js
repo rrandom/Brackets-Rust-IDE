@@ -30,12 +30,13 @@ define(function (require, exports, module) {
     var AppInit = brackets.getModule("utils/AppInit");
 
     var CodeHintManager = brackets.getModule("editor/CodeHintManager"),
+        EditorManager = brackets.getModule("editor/EditorManager"),
         ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
         QuickOpen = brackets.getModule("search/QuickOpen"),
         LanguageManager = brackets.getModule('language/LanguageManager');
 
     var RacerSettings = require("src/dialogs/RacerSettings"),
-        RustHintProvider = require("src/RustHintProvider"),
+        RacerProviders = require("src/RacerProviders"),
         QuickOpenPlugin = require("src/QuickOpenPlugin"),
         SyntaxColoring = require("src/SyntaxColoring");
 
@@ -68,12 +69,19 @@ define(function (require, exports, module) {
             });
 
             ExtensionUtils.loadStyleSheet(module, "styles/main.css");
-            var rustHintProvider = new RustHintProvider();
-            console.info('Registering Rust Hint Provider');
+            console.info('Registering Rust Providers');
+
+            console.log('RacerProvidres:', RacerProviders);
+
+            var rustHintProvider = new RacerProviders.RustHintProvider(),
+                rustDefinitionProvider = new RacerProviders.RustDefinitionProvider();
+
             CodeHintManager.registerHintProvider(rustHintProvider, ["rust"], 10);
-            console.info('Registered Rust Hint Provider');
+            EditorManager.registerInlineEditProvider(rustDefinitionProvider.provider);
+
+            console.info('Registered Rust Providers');
         } catch (e) {
-            console.error("Error starting up Rust hint provider", e);
+            console.error("Error starting up Rust providers", e);
             setTimeout(startup, 10000);
         }
     }
