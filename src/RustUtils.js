@@ -54,6 +54,7 @@ define(function (require, exports, module) {
      * Tracks dirty documents between invocations of findMatchingFunctions.
      * @type {ChangedDocumentTracker}
      */
+    var _changedDocumentTracker = new ChangedDocumentTracker();
 
     /**
      * Function matching regular expression. Recognizes the forms:
@@ -64,7 +65,6 @@ define(function (require, exports, module) {
      * RegExp matches any sequence of characters that is not whitespace.
      * @type {RegExp}
      */
-
     var _functionRegExp = /(extern\s+)?("((?:\\.|[^"\\])*)"\s+)?(fn\s+([$_A-Za-z\u007F-\uFFFF][$_A-Za-z0-9\u007F-\uFFFF]*)(<[^>]*>)?\s*(\([^)]*\)))/g;
 
     /**
@@ -172,6 +172,237 @@ define(function (require, exports, module) {
         return length;
     }
 
+    /**
+     * @private
+     * Computes function offsetEnd, lineStart and lineEnd. Appends a result record to rangeResults.
+     * @param {!Document} doc
+     * @param {!string} functionName
+     * @param {!Array.<{offsetStart: number, offsetEnd: number}>} functions
+     * @param {!Array.<{document: Document, name: string, lineStart: number, lineEnd: number}>} rangeResults
+     */
+    function _computeOffsets(doc, functionName, functions, rangeResults) {
+        var text = doc.getText(),
+            lines = StringUtils.getLines(text);
+
+        functions.forEach(function (funcEntry) {
+            if (!funcEntry.offsetEnd) {
+                PerfUtils.markStart(PerfUtils.RustUTILS_END_OFFSET);
+
+                funcEntry.offsetEnd = _getFunctionEndOffset(text, funcEntry.offsetStart);
+                funcEntry.lineStart = StringUtils.offsetToLineNum(lines, funcEntry.offsetStart);
+                funcEntry.lineEnd = StringUtils.offsetToLineNum(lines, funcEntry.offsetEnd);
+
+                PerfUtils.addMeasurement(PerfUtils.RustUTILS_END_OFFSET);
+            }
+
+            rangeResults.push({
+                document: doc,
+                name: functionName,
+                lineStart: funcEntry.lineStart,
+                lineEnd: funcEntry.lineEnd
+            });
+        });
+    }
+
+    /**
+     * @private
+     * Read a file and build a function list. Result is cached in fileInfo.
+     * @param {!FileInfo} fileInfo File to parse
+     * @param {!$.Deferred} result Deferred to resolve with all functions found and the document
+     */
+    function _readFile(fileInfo, result) {
+        DocumentManager.getDocumentForPath(fileInfo.fullPath)
+            .done(function (doc) {
+                var allFunctions = _findAllFunctionsInText(doc.getText());
+
+                // Cache the result in the fileInfo object
+                fileInfo.RustUtils = {};
+                fileInfo.RustUtils.functions = allFunctions;
+                fileInfo.RuUtils.timestamp = doc.diskTimestamp;
+
+                result.resolve({
+                    doc: doc,
+                    functions: allFunctions
+                });
+            })
+            .fail(function (error) {
+                result.reject(error);
+            });
+    }
+
+
+    /**
+     * Determines if the document function cache is up to date.
+     * @param {FileInfo} fileInfo
+     * @return {$.Promise} A promise resolved with true with true when a function cache is available for the document. Resolves
+     *   with false when there is no cache or the cache is stale.
+     */
+    function _shouldGetFromCache(fileInfo) {
+        var result = new $.Deferred(),
+            isChanged = _changedDocumentTracker.isPathChanged(fileInfo.fullPath);
+
+        if (isChanged && fileInfo.RustUtils) {
+            var doc = DocumentManager.getOpenDocumentForPath(fileInfo.fullPath);
+
+            if (doc && doc.isDirty) {
+                result.resolve(false);
+            } else {
+                var file = FileSystem.getFileForPath(fileInfo.fullPath);
+
+                file.stat(function (err, stat) {
+                    if (!err) {
+                        result.resolve(fileInfo.RustUtils.timestamp.getTime() === stat.mtime.getTime());
+                    } else {
+                        result.reject(err);
+                    }
+                });
+            }
+
+        } else {
+            result.resolve(!isChanged && fileInfo.RustUtils);
+        }
+
+        return result.promise();
+    }
+
+    /**
+     * @private
+     * Compute lineStart and lineEnd for each matched function
+     * @param {!Array.<{doc: Document, fileInfo: FileInfo, functions: Array.<offsetStart: number, offsetEnd: number>}>} docEntries
+     * @param {!string} functionName
+     * @param {!Array.<document: Document, name: string, lineStart: number, lineEnd: number>} rangeResults
+     * @return {$.Promise} A promise resolved with an array of document ranges to populate a MultiRangeInlineEditor.
+     */
+    function _getOffsetsForFunction(docEntries, functionName) {
+        // Filter for documents that contain the named function
+        var result = new $.Deferred(),
+            matchedDocuments = [],
+            rangeResults = [];
+
+        docEntries.forEach(function (docEntry) {
+            // Need to call _.has here since docEntry.functions could have an
+            // entry for "hasOwnProperty", which results in an error if trying
+            // to invoke docEntry.functions.hasOwnProperty().
+            if (_.has(docEntry.functions, functionName)) {
+                var functionsInDocument = docEntry.functions[functionName];
+                matchedDocuments.push({
+                    doc: docEntry.doc,
+                    fileInfo: docEntry.fileInfo,
+                    functions: functionsInDocument
+                });
+            }
+        });
+
+        Async.doInParallel(matchedDocuments, function (docEntry) {
+            var doc = docEntry.doc,
+                oneResult = new $.Deferred();
+
+            // doc will be undefined if we hit the cache
+            if (!doc) {
+                DocumentManager.getDocumentForPath(docEntry.fileInfo.fullPath)
+                    .done(function (fetchedDoc) {
+                        _computeOffsets(fetchedDoc, functionName, docEntry.functions, rangeResults);
+                    })
+                    .always(function () {
+                        oneResult.resolve();
+                    });
+            } else {
+                _computeOffsets(doc, functionName, docEntry.functions, rangeResults);
+                oneResult.resolve();
+            }
+
+            return oneResult.promise();
+        }).done(function () {
+            result.resolve(rangeResults);
+        });
+
+        return result.promise();
+    }
+
+    /**
+     * Resolves with a record containing the Document or FileInfo and an Array of all
+     * function names with offsets for the specified file. Results may be cached.
+     * @param {FileInfo} fileInfo
+     * @return {$.Promise} A promise resolved with a document info object that
+     *   contains a map of all function names from the document and each function's start offset.
+     */
+    function _getFunctionsForFile(fileInfo) {
+        var result = $.Deferred();
+
+        _shouldGetFromCache(fileInfo).done(function (useCache) {
+            if (useCache) {
+                result.resolve({
+                    fileInfo: fileInfo,
+                    functions: fileInfo.RustUtils.functions
+                });
+            } else {
+                _readFile(fileInfo, result);
+            }
+        }).fail(function (err) {
+            result.reject(err);
+        });
+
+        return result.promise();
+    }
+
+    /**
+     * @private
+     * Get all functions for each FileInfo.
+     * @param {Array.<FileInfo>} fileInfos
+     * @return {$.Promise} A promise resolved with an array of document info objects that each
+     *   contain a map of all function names from the document and each function's start offset.
+     */
+    function _getFunctionsInFiles(fileInfos) {
+        var result = new $.Deferred(),
+            docEntries = [];
+        Async.doInParallel(fileInfos, function (fileInfo) {
+            var oneResult = new $.Deferred();
+
+            _getFunctionsForFile(fileInfo)
+                .done(function (docInfo) {
+                    docEntries.push(docInfo);
+                }).always(function (error) {
+                    oneResult.resolve();
+                });
+
+            return oneResult.promise();
+        }).always(function () {
+            _changedDocumentTracker.reset();
+            result.resolve(docEntries);
+        });
+
+        return result.promise();
+    }
+
+    /**
+     * Return all functions that have the specified name, searching across all the given files.
+     *
+     * @param {!String} functionName The name to match.
+     * @param {!Array.<File>} fileInfos The array of files to search.
+     * @param {boolean=} keepAllFiles If true, don't ignore non-javascript files.
+     * @return {$.Promise} that will be resolved with an Array of objects containing the
+     *      source document, start line, and end line (0-based, inclusive range) for each matching function list.
+     *      Does not addRef() the documents returned in the array.
+     */
+    function findMatchingFunctions(functionName, fileInfos, keepAllFiles) {
+        var result = new $.Deferred(),
+            rustFiles = [];
+
+        if (!keepAllFiles) {
+            rustFiles = fileInfos.filter(function (fileInfo) {
+                return FileUtils.getFileExtension(fileInfo.fullPath).toLowerCase() === 'js';
+            });
+        } else {
+            rustFiles = fileInfos;
+        }
+
+        _getFunctionsInFiles(rustFiles).done(function (docEntries) {
+            _getOffsetsForFunction(docEntries, functionName).done(function (rangeResults) {
+                result.resolve(rangeResults);
+            });
+        });
+        return result.promise();
+    }
 
     /**
      * Finds all instances of the specified searchName in "text".
@@ -204,10 +435,10 @@ define(function (require, exports, module) {
     }
 
 
-    //PerfUtils.createPerfMeasurement("JSUTILS_GET_ALL_FUNCTIONS", "Parallel file search across project");
+    PerfUtils.createPerfMeasurement("RustUTILS_GET_ALL_FUNCTIONS", "Parallel file search across project");
     PerfUtils.createPerfMeasurement("RustUTILS_REGEXP", "RegExp search for all functions");
-    //PerfUtils.createPerfMeasurement("JSUTILS_END_OFFSET", "Find end offset for a single matched function");
-
+    PerfUtils.createPerfMeasurement("RustUILS_END_OFFSET", "Find end offset for a single matched function");
 
     exports.findAllMatchingFunctionsInText = findAllMatchingFunctionsInText;
+    exports.getFunctionEndOffset = _getFunctionEndOffset;
 });
