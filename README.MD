@@ -13,7 +13,7 @@ https://github.com/phildawes/racer
 
 #### TO-DO
 
-quick-edit
-1. Compute offset to get function line end
-2. Diffiate different types `module, trait, strust...`.
+- quick-edit
+1. ~~Compute offset to get function line end~~
+2. differentiate different types `module, trait, struct...`.
 3. open local file;

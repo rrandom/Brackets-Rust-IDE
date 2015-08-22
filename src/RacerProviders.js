@@ -20,10 +20,14 @@ define(function (require, exports, module) {
     var MultiRangeInlineEditor = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
         DocumentManager = brackets.getModule("document/DocumentManager"),
         FileSystem = brackets.getModule('filesystem/FileSystem'),
+        //FileUtils = brackets.getModule('file/FileUtils'),
+        StringUtils = brackets.getModule("utils/StringUtils"),
         _ = brackets.getModule("thirdparty/lodash");
 
     var RacerCli = require('src/RacerCli');
-    var vpet = 0;
+
+    var vpet = 0,
+        extName = 'RustIDE';
 
     function RustHintProvider() {
 
@@ -61,7 +65,7 @@ define(function (require, exports, module) {
             try {
                 ta.pop();
                 rs = ta.map(function (i) {
-                    return RacerCli.resolve(i).name;
+                    return RacerCli.parse(i).name;
                 });
             } catch (e) {
                 console.error('[RustHintProvider] extractHints: Please notify me if you see this error');
@@ -189,13 +193,41 @@ define(function (require, exports, module) {
 
         var _$deferred;
 
+        // compute the end line of a definiton(function), get base on identation;
+        // a very simple apporach, maybe buggy
+        // TO-DO: consider use codemirror codefold addon to find the def endline
+        function _getDefEndLine(txt, startLine) {
+            var lines = txt.split('\n'),
+                firstLine = lines[startLine - 1],
+                i = 0,
+                l = 0;
+            for (i = 0; i < firstLine.length; i++) {
+                if ([' ', '\t'].indexOf(firstLine[i]) < 0) {
+                    break;
+                }
+            }
+
+            for (l = startLine; l < lines.length; l++) {
+                if (lines[l][i] === '}') {
+                    break;
+                }
+            }
+
+            //return startLine + 10;
+            return l;
+        }
+
+        // TO-DO: racer find-definiton maybe should call on this file not the tmp file
         function _resolveDef(data, hostEditor) {
             var defs = data.split('\n'),
-                // only resolve the first match for simplicity
-                fun_item = RacerCli.resolve(defs[0]),
+                // only use the first match for simplicity
+                fun_item = RacerCli.parse(defs[0]),
+
                 path = fun_item.path;
 
-            console.log('path:', path);
+            console.log(extName + ' fun_item:', fun_item);
+
+            // TO-DO: consider use FileUtils.convertWindowsPathToUnixPath();
             if (!FileSystem.isAbsolutePath(path)) {
                 path = path.split('\\').join('/');
             }
@@ -203,8 +235,7 @@ define(function (require, exports, module) {
             DocumentManager.getDocumentForPath(path).done(function (doc) {
 
                 var lineStart = Number(fun_item.line),
-                    lineEnd = lineStart + 10;
-
+                    lineEnd = _getDefEndLine(doc._text, lineStart);
                 console.log('doc:\n', doc);
 
                 var ranges = [{
@@ -226,7 +257,7 @@ define(function (require, exports, module) {
         }
 
         this.provider = function (hostEditor, pos) {
-            if (["text/x-rustsrc", "rust"].indexOf(hostEditor.getModeForSelection()) > -1) {
+            if (["text/x-rustsrc", "rust"].indexOf(hostEditor.getModeForSelection()) < 0) {
                 return null;
             }
             var sel = hostEditor.getSelection();

@@ -66,7 +66,7 @@ define(function (require, exports, module) {
     }
 
 
-    function resolve(str) {
+    function parse(str) {
         var result;
         try {
             var tmp = str.split(',');
@@ -79,7 +79,7 @@ define(function (require, exports, module) {
                 first_line: tmp[5]
             };
         } catch (e) {
-            console.error("[RacerDomain] Error when resolve: ", e);
+            console.error("[RacerDomain] Error when parse: ", e);
         }
         return result;
 
@@ -89,5 +89,5 @@ define(function (require, exports, module) {
     exports.nodeConnection = nodeConnection;
     exports.getHintsD = getHintsD;
     exports.getDefD = getDefD;
-    exports.resolve = resolve;
+    exports.parse = parse;
 });

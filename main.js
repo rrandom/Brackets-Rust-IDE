@@ -40,8 +40,6 @@ define(function (require, exports, module) {
         QuickOpenPlugin = require("src/QuickOpenPlugin"),
         SyntaxColoring = require("src/SyntaxColoring");
 
-    var QuickEdit = require("src/QuickEditProvider");
-
     function startup() {
         try {
             QuickOpen.addQuickOpenPlugin({
@@ -70,8 +68,6 @@ define(function (require, exports, module) {
 
             ExtensionUtils.loadStyleSheet(module, "styles/main.css");
             console.info('Registering Rust Providers');
-
-            console.log('RacerProvidres:', RacerProviders);
 
             var rustHintProvider = new RacerProviders.RustHintProvider(),
                 rustDefinitionProvider = new RacerProviders.RustDefinitionProvider();
