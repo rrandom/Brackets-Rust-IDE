@@ -217,7 +217,6 @@ define(function (require, exports, module) {
             return l;
         }
 
-        // TO-DO: racer find-definiton maybe should call on this file not the tmp file
         function _resolveDef(data, hostEditor) {
             var defs = data.split('\n'),
                 // only use the first match for simplicity
@@ -264,9 +263,9 @@ define(function (require, exports, module) {
             if (sel.start.line !== sel.end.line) {
                 return null;
             }
-            // may change to not use codemirror api
-            var txt = hostEditor._codeMirror.getValue();
+            var fpath = hostEditor.document.file.fullPath;
 
+            console.log('fpath:', fpath);
             $(RacerCli.nodeConnection).on("RacerDomain:defFound", function (evt, data, petition) {
                 if (data === 'PANIC PANIC PANIC\n') {
                     data = '';
@@ -278,7 +277,7 @@ define(function (require, exports, module) {
                     console.warn("Not Found Definition");
                 }
             });
-            _$deferred = RacerCli.getDefD(txt, sel.start, ++vpet);
+            _$deferred = RacerCli.getDefD('', sel.start, ++vpet, fpath);
             return _$deferred;
         };
     }

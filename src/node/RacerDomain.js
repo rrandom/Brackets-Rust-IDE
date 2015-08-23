@@ -41,15 +41,18 @@
         extName = '[rust-ide]';
 
 
-    // args: {txt, line, char, path, command, event}
+    // args: {txt, line, char, path, isPathTmp, command, event}
     function racerCli(racerPath, args, petition) {
         try {
-            var tmpFile = args.path + 'tmp.racertmp',
+            var fname = args.path,
                 output = '';
-            fs.writeFileSync(tmpFile, args.txt);
-
+            // use tmp file or not
+            if (args.isPathTmp) {
+                fname = fname + 'tmp.racertmp';
+                fs.writeFileSync(fname, args.txt);
+            }
             var racer = Child_process.spawn(
-                racerPath, [args.command, args.line, args.char, tmpFile]
+                racerPath, [args.command, args.line, args.char, fname]
             );
 
             racer.stdout.on('data', function (data) {
@@ -106,7 +109,7 @@
                 {
                     name: "args",
                     type: "object",
-                    description: "{txt, line, char, path}"
+                    description: "{txt, line, char, path, isPathTmp}"
                 },
                 {
                     name: "petition",
@@ -130,7 +133,7 @@
                 {
                     name: "args",
                     type: "object",
-                    description: "{txt, line, char, path}"
+                    description: "{txt, line, char, path, isPathTmp}"
                 },
                 {
                     name: "petition",

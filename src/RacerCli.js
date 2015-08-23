@@ -41,22 +41,21 @@ define(function (require, exports, module) {
             txt: txt,
             line: pos.line + 1,
             char: pos.ch,
-            path: extPath
+            path: extPath,
+            isPathTmp: true
         };
-        console.log('prefs.get():', prefs.get("racerPath"));
-        console.log('args:', args);
-        console.log('vpet:', vpet);
         RacerDomain.exec("getHint", prefs.get("racerPath"), args, vpet).fail(function (err) {
             console.error('[RacerDomain] Fail to get hints: ', err);
         });
     }
 
-    function getDefD(txt, pos, vpet) {
+    function getDefD(txt, pos, vpet, path) {
         var args = {
             txt: txt,
             line: pos.line + 1,
             char: pos.ch,
-            path: extPath
+            path: path,
+            isPathTmp: false
         };
         var $deferred = new $.Deferred();
         RacerDomain.exec("findDef", prefs.get("racerPath"), args, vpet).fail(function (err) {
