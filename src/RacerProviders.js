@@ -224,18 +224,15 @@ define(function (require, exports, module) {
 
                 path = fun_item.path;
 
-            console.log(extName + ' fun_item:', fun_item);
-
             // TO-DO: consider use FileUtils.convertWindowsPathToUnixPath();
             if (!FileSystem.isAbsolutePath(path)) {
                 path = path.split('\\').join('/');
             }
 
             DocumentManager.getDocumentForPath(path).done(function (doc) {
-
                 var lineStart = Number(fun_item.line),
-                    lineEnd = _getDefEndLine(doc._text, lineStart);
-                console.log('doc:\n', doc);
+                    // doc._text might be null
+                    lineEnd = _getDefEndLine(doc._text ? doc._text : doc.file._contents, lineStart);
 
                 var ranges = [{
                     document: doc,
