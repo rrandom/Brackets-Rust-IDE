@@ -1,7 +1,11 @@
 # Change Log
 
+## 1.0.6 - 2015-8-23
+### Added
+ - new feature: quick-edit
+
 ## 1.0.5 - 2015-8-18
- - Fix for [issue #2](https://github.com/rrandom/Brackets-Rust-IDE/issues/2)
+ - Fix [issue #2](https://github.com/rrandom/Brackets-Rust-IDE/issues/2)
 
 ## 1.0.4 - 2015-8-12
 
