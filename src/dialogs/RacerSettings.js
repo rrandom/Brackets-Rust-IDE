@@ -22,7 +22,7 @@ define(function (require, exports, module) {
         var questionDialogTemplate = require("text!src/dialogs/templates/rust-ide-settings.html");
         var compiledTemplate = Mustache.render(questionDialogTemplate, {
             title: "Rust-IDE Settings",
-            question: "Set your racer bin file path, like '..\\racer\\target\\release\\racer.exe'",
+            question: "Set the absolute path of your racer bin file, e.g. 'D:\\racer\\target\\release\\racer.exe'",
             defaultValue: prefs.get("racerPath"),
             BUTTON_CANCEL: "Cancel",
             BUTTON_OK: "OK"
