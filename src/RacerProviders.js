@@ -219,37 +219,52 @@ define(function (require, exports, module) {
 
         function _resolveDef(data, hostEditor) {
             var defs = data.split('\n'),
+                fun_item,
+                path;
+
+            // Don't provide def when racer returns END
+            if (defs[0] === 'END') {
+                _$deferred.reject();
+                return null;
+            } else {
+
                 // only use the first match for simplicity
-                fun_item = RacerCli.parse(defs[0]),
-
+                fun_item = RacerCli.parse(defs[0]);
                 path = fun_item.path;
-
-            // TO-DO: consider use FileUtils.convertWindowsPathToUnixPath();
-            if (!FileSystem.isAbsolutePath(path)) {
-                path = path.split('\\').join('/');
-            }
-
-            DocumentManager.getDocumentForPath(path).done(function (doc) {
-                var lineStart = Number(fun_item.line),
-                    // doc._text might be null
-                    lineEnd = _getDefEndLine(doc._text ? doc._text : doc.file._contents, lineStart);
-
-                var ranges = [{
-                    document: doc,
-                    name: name,
-                    lineStart: lineStart - 1,
-                    lineEnd: lineEnd
-                }];
-                try {
-                    var rustInlineEditor = new MultiRangeInlineEditor(ranges);
-                    rustInlineEditor.load(hostEditor);
-                    _$deferred.resolve(rustInlineEditor);
-                } catch (e) {
-                    console.error("[RustDefinitionProvidre] Error of get def", e);
+                // Don't provide def when its a module
+                if (fun_item.type === 'Module') {
+                    _$deferred.reject();
                 }
-            }).fail(function (e) {
-                console.error('[RustDefinitionProvidre] Error of get from path e:', e);
-            });
+
+                // TO-DO: consider use FileUtils.convertWindowsPathToUnixPath();
+                if (!FileSystem.isAbsolutePath(path)) {
+                    path = path.split('\\').join('/');
+                }
+
+                DocumentManager.getDocumentForPath(path).done(function (doc) {
+                    var lineStart = Number(fun_item.line),
+                        // doc._text might be null
+                        lineEnd = _getDefEndLine(doc._text || doc.file._contents, lineStart);
+
+                    var ranges = [
+                        {
+                            document: doc,
+                            name: name,
+                            lineStart: lineStart - 1,
+                            lineEnd: lineEnd
+                        }
+                    ];
+                    try {
+                        var rustInlineEditor = new MultiRangeInlineEditor(ranges);
+                        rustInlineEditor.load(hostEditor);
+                        _$deferred.resolve(rustInlineEditor);
+                    } catch (e) {
+                        console.error("[RustDefinitionProvidre] Error of get def", e);
+                    }
+                }).fail(function (e) {
+                    console.error('[RustDefinitionProvidre] Error of get from path e:', e);
+                });
+            }
         }
 
         this.provider = function (hostEditor, pos) {
@@ -262,7 +277,6 @@ define(function (require, exports, module) {
             }
             var fpath = hostEditor.document.file.fullPath;
 
-            console.log('fpath:', fpath);
             $(RacerCli.nodeConnection).on("RacerDomain:defFound", function (evt, data, petition) {
                 if (data === 'PANIC PANIC PANIC\n') {
                     data = '';
