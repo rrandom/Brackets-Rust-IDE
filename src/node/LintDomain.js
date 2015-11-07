@@ -1,26 +1,31 @@
 (function () {
-    "use strict";
 
-    var Child_process = require('child_process');
+    ////////////////////////////////////////////////////////////////////////////////
 
+    var child_process;
 
-    function cmdLint(exec, cb){
-        Child_process.exec(exec, function(err, stdout, stderr) {
+    child_process = require('child_process');
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    exports.init = function (manager) {
+        if (!manager.hasDomain('rustlint'))
+            manager.registerDomain('rustlint', {
+                major: 1,
+                minor: 0
+            });
+
+        manager.registerCommand('rustlint', 'commander', commander, true);
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    function commander(exec, cb) {
+        child_process.exec(exec, function (err, stdout, stderr) {
             cb(null, stderr + stdout);
         });
     }
 
-    function init(domainManager) {
-        if (!domainManager.hasDomain('RustLintDomain')) {
-            domainManager.registerDomain('RustLintDomain', {
-                major: 0,
-                minor: 1
-            });
-        }
+    ////////////////////////////////////////////////////////////////////////////////
 
-        domainManager.registerCommand('RustLintDomain', 'lint', cmdLint, true);
-
-    }
-
-    exports.init = init;
-})
+}());
