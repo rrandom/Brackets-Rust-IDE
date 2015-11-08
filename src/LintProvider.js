@@ -100,6 +100,13 @@ define(function (require, exports, module) {
 
     }
 
+    //TO-DO: type is warning or error
+    function makeMarker(type){
+
+        return $("<div class='rust-linter-gutter-icon' title='Click for details'>●</div>")[0];
+
+    }
+
     function addError(cm, error) {
         console.log(domain + 'error:', error);
         for (var i = 0; i < error.length; i++) {
@@ -107,20 +114,9 @@ define(function (require, exports, module) {
             // TO-DO: makeMaker as a function
             // http://codemirror.net/demo/marker.html
 
-            var marker = document.createElement("div");
-            marker.style.color = "#822";
-            marker.innerHTML = '●';
-            marker.className = 'rust-gutter';
+            var marker = makeMarker();
 
-            marker.click(function () {
-                Dialogs.showModalDialog(
-                    'RustLinter',
-                    'Rust Error',
-                    error[i].message
-                );
-            });
-
-            cm.setGutterMarker(error[i].pos.line, 'rust-gutter', marker);
+            cm.setGutterMarker(error[i].pos.line, 'rust-linter-gutter', marker);
         }
     }
 

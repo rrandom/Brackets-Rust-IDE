@@ -34,3 +34,15 @@
     color: white;
     box-sizing: border-box;
 }
+
+
+.CodeMirror .rust-linter-gutter {
+    width: 23px;
+}
+
+
+.CodeMirror .rust-linter-gutter-icon {
+    color: #822;
+    margin-left: 7px;
+    cursor: pointer;
+}
