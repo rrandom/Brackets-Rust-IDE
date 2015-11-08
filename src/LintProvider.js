@@ -1,11 +1,12 @@
 define(function (require, exports, module) {
     "use strict";
 
+    // TO-DO: inlineWidget
+
     var AppInit = brackets.getModule('utils/AppInit'),
         DocumentManager = brackets.getModule('document/DocumentManager'),
         CodeInspection = brackets.getModule('language/CodeInspection'),
         EditorManager = brackets.getModule('editor/EditorManager'),
-        Dialogs = brackets.getModule('widgets/Dialogs'),
         NodeConnection = brackets.getModule('utils/NodeConnection'),
         ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         node = new NodeConnection(),
@@ -40,6 +41,7 @@ define(function (require, exports, module) {
         });
     }
 
+    // TO-DO: add lint error type
     function getLintErrors(filePath, cb) {
         var pattern = /.*:(\d+):(\d+): (\d+):(\d+) (.+)/;
 
@@ -78,7 +80,7 @@ define(function (require, exports, module) {
 
     function analizeErrors(codeMirror, filePath) {
         getLintErrors(filePath, function (error) {
-            if (error) {
+            if (error.length > 0) {
                 addError(codeMirror, error);
             } else {
                 codeMirror.clearGutter("rust-linter-gutter");
@@ -100,22 +102,20 @@ define(function (require, exports, module) {
 
     }
 
-    //TO-DO: type is warning or error
-    function makeMarker(type){
+    function makeMarker(type) {
 
-        return $("<div class='rust-linter-gutter-icon' title='Click for details'>●</div>")[0];
+        var lint_type = (type === 'error') ? 'rust-linter-gutter-error' : 'rust-linter-gutter-warning',
+            marker = $("<div class='rust-linter-gutter-icon' title='Click for details'>●</div>");
 
+        marker.addClass(lint_type);
+
+        return marker[0];
     }
 
     function addError(cm, error) {
         console.log(domain + 'error:', error);
         for (var i = 0; i < error.length; i++) {
-
-            // TO-DO: makeMaker as a function
-            // http://codemirror.net/demo/marker.html
-
             var marker = makeMarker();
-
             cm.setGutterMarker(error[i].pos.line, 'rust-linter-gutter', marker);
         }
     }
