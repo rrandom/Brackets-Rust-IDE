@@ -25,7 +25,6 @@ define(function (require, exports, module) {
         AppInit.appReady(init);
     }
 
-    // TO-DO: add lint error type
     function getLintErrors(filePath, cb) {
         var pattern = /^(.+?):(\d+):(\d+):\s+(\d+):(\d+)\s(error|fatal error|warning):\s+(.+)/;
 
@@ -46,6 +45,7 @@ define(function (require, exports, module) {
                                     line: match[4] - 1,
                                     ch: match[5]
                                 },
+                                type: match[6] === 'warning' ? 'warning' : 'error',
                                 message: match[7]
                             };
                         }
@@ -99,7 +99,7 @@ define(function (require, exports, module) {
     function addError(cm, error) {
         console.log(domain + 'error:', error);
         for (var i = 0; i < error.length; i++) {
-            var marker = makeMarker();
+            var marker = makeMarker(error[i].type);
             cm.setGutterMarker(error[i].pos.line, 'rust-linter-gutter', marker);
         }
     }
