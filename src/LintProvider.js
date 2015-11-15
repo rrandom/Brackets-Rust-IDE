@@ -25,49 +25,33 @@ define(function (require, exports, module) {
         AppInit.appReady(init);
     }
 
-    function cleanErrorMessages(message) {
-        var lines = message.split(/(?:\r\n|\r|\n)/g);
-
-        return lines.map(function (line) {
-            if (line.indexOf('^') === -1) {
-                if ((line.indexOf('warning:') !== -1) || (line.indexOf('error:') !== -1)) {
-                    return line;
-                }
-                return '';
-            }
-            return '';
-        }).filter(function (message) {
-            return message !== '';
-        });
-    }
-
     // TO-DO: add lint error type
     function getLintErrors(filePath, cb) {
-        var pattern = /.*:(\d+):(\d+): (\d+):(\d+) (.+)/;
+        var pattern = /^(.+?):(\d+):(\d+):\s+(\d+):(\d+)\s(error|fatal error|warning):\s+(.+)/;
 
         node.domains.rustlint.commander('rustc -Z no-trans "' + filePath + '"')
             .done(function (data) {
                 console.log(domain + 'data:', data);
-                var messages = cleanErrorMessages(data);
 
-                inspectionErrors = messages.map(function (message) {
-                    var match = pattern.exec(message);
-                    if (match) {
-                        return {
-                            pos: {
-                                line: match[1] - 1,
-                                ch: match[2]
-                            },
-                            endPos: {
-                                line: match[3] - 1,
-                                ch: match[4]
-                            },
-                            message: match[5]
-                        };
-                    }
-                }).filter(function (message) {
-                    return message !== undefined;
-                });
+                inspectionErrors = data.split(/(?:\r\n|\r|\n)/g)
+                    .map(function (message) {
+                        var match = pattern.exec(message);
+                        if (match) {
+                            return {
+                                pos: {
+                                    line: match[2] - 1,
+                                    ch: match[3]
+                                },
+                                endPos: {
+                                    line: match[4] - 1,
+                                    ch: match[5]
+                                },
+                                message: match[7]
+                            };
+                        }
+                    }).filter(function (message) {
+                        return message !== undefined;
+                    });
 
                 CodeInspection.requestRun();
 
