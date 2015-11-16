@@ -13,6 +13,7 @@ define(function (require, exports, module) {
         inspectionErrors = [];
 
     var domain = '[RustLint]: ';
+    var pattern = /^(.+?):(\d+):(\d+):\s+(\d+):(\d+)\s(error|fatal error|warning):\s+(.+)/;
 
     if (!node.domains.rustlint) {
         node.connect(true).done(function () {
@@ -25,38 +26,40 @@ define(function (require, exports, module) {
         AppInit.appReady(init);
     }
 
-    function getLintErrors(filePath, cb) {
-        var pattern = /^(.+?):(\d+):(\d+):\s+(\d+):(\d+)\s(error|fatal error|warning):\s+(.+)/;
+    function parserError(data, cb) {
+        console.log('RustLint errors: ', data);
 
+        inspectionErrors = data.split(/(?:\r\n|\r|\n)/g)
+            .map(function (message) {
+                var match = pattern.exec(message);
+                if (match) {
+                    return {
+                        file: match[1],
+                        pos: {
+                            line: match[2] - 1,
+                            ch: match[3]
+                        },
+                        endPos: {
+                            line: match[4] - 1,
+                            ch: match[5]
+                        },
+                        type: match[6] === 'warning' ? 'warning' : 'error',
+                        message: match[7]
+                    };
+                }
+            }).filter(function (message) {
+                return message !== undefined;
+            });
+
+        CodeInspection.requestRun();
+        cb(inspectionErrors);
+    }
+
+    // TO-DO: `cargo rustc -Zno-trans` to lint crate
+    function getLintErrors(filePath, cb) {
         node.domains.rustlint.commander('rustc -Z no-trans "' + filePath + '"')
             .done(function (data) {
-                console.log(domain + 'data:', data);
-
-                inspectionErrors = data.split(/(?:\r\n|\r|\n)/g)
-                    .map(function (message) {
-                        var match = pattern.exec(message);
-                        if (match) {
-                            return {
-                                pos: {
-                                    line: match[2] - 1,
-                                    ch: match[3]
-                                },
-                                endPos: {
-                                    line: match[4] - 1,
-                                    ch: match[5]
-                                },
-                                type: match[6] === 'warning' ? 'warning' : 'error',
-                                message: match[7]
-                            };
-                        }
-                    }).filter(function (message) {
-                        return message !== undefined;
-                    });
-
-                CodeInspection.requestRun();
-
-                cb(inspectionErrors);
-
+                parserError(data, cb);
             }).fail(function (err) {
                 console.error(domain, err);
             });
@@ -73,7 +76,6 @@ define(function (require, exports, module) {
     }
 
     function registerGutter() {
-
         var currentEditor = EditorManager.getActiveEditor(),
             codeMirror = currentEditor._codeMirror,
             gutters = codeMirror.getOption("gutters").slice(0);
@@ -81,18 +83,13 @@ define(function (require, exports, module) {
             gutters.unshift('rust-linter-gutter');
             codeMirror.setOption('gutters', gutters);
         }
-
         return codeMirror;
-
     }
 
     function makeMarker(type) {
-
         var lint_type = (type === 'error') ? 'rust-linter-gutter-error' : 'rust-linter-gutter-warning',
             marker = $("<div class='rust-linter-gutter-icon' title='Click for details'>●</div>");
-
         marker.addClass(lint_type);
-
         return marker[0];
     }
 
