@@ -9,10 +9,12 @@ define(function (require, exports, module) {
         EditorManager = brackets.getModule('editor/EditorManager'),
         NodeConnection = brackets.getModule('utils/NodeConnection'),
         ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
+        ProjectManager = brackets.getModule('project/ProjectManager'),
         node = new NodeConnection(),
         inspectionErrors = [];
 
     var domain = '[RustLint]: ';
+    var currentProject = {};
     var pattern = /^(.+?):(\d+):(\d+):\s+(\d+):(\d+)\s(error|fatal error|warning):\s+(.+)/;
 
     if (!node.domains.rustlint) {
@@ -25,6 +27,24 @@ define(function (require, exports, module) {
     } else {
         AppInit.appReady(init);
     }
+
+    // return a promise resolved with true if current project is a crate(with 'Cargo.toml')
+    function isCrate() {
+        var deferred = new $.Deferred;
+        ProjectManager.getAllFiles(ProjectManager.getLanguageFilter('toml')).done(function (files) {
+            var names = files.map(function (file) {
+                return file._name;
+            });
+
+            if (names.indexOf('Cargo.toml') > -1) {
+                deferred.resolve(true);
+            }
+            deferred.resolve(false);
+        });
+
+        return deferred.promise();
+    }
+
 
     function parserError(data, cb) {
         console.log('RustLint errors: ', data);
@@ -101,7 +121,20 @@ define(function (require, exports, module) {
         }
     }
 
+    ProjectManager.on('projectOpen', function (e, project) {
+        currentProject = project;
+    });
+
+    // TO-DO: rewrite it
     function init() {
+        var isCrateFlag = false;
+        var useCargo = false;
+
+        ProjectManager.on('projectOpen', function (e, project) {
+            //isCrateFlag = isCrate();
+            currentProject = project;
+        });
+
         if (EditorManager) {
             EditorManager.on('activeEditorChange', function (event, EditorManager) {
                 var currentDocument = DocumentManager.getCurrentDocument(),
@@ -109,11 +142,14 @@ define(function (require, exports, module) {
 
                 if (currentDocument) {
                     if (currentDocument.language._name === 'Rust') {
+                        //TO-DO: use cargo to lint if it's a crate and currentDocument in the currentProject's directory;
+                        useCargo = isCrateFlag && (currentDocument.file._path.indexOf(currentDocument._path) === 0);
+
                         codeMirror = registerGutter();
-                        analizeErrors(codeMirror, currentDocument.file._path);
+                        analizeErrors(codeMirror, currentDocument.file._path, useCargo);
 
                         DocumentManager.on('documentSaved', function () {
-                            analizeErrors(codeMirror, currentDocument.file._path);
+                            analizeErrors(codeMirror, currentDocument.file._path, useCargo);
                         });
                     } else {
                         DocumentManager.off('documentSaved');
