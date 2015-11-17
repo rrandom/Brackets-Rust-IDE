@@ -40,6 +40,8 @@ define(function (require, exports, module) {
         QuickOpenPlugin = require("src/QuickOpenPlugin"),
         SyntaxColoring = require("src/SyntaxColoring");
 
+    var Lint = require("src/LintProvider");
+
     function startup() {
         try {
             QuickOpen.addQuickOpenPlugin({
