@@ -85,7 +85,9 @@ define(function (require, exports, module) {
             });
     }
 
-    function analizeErrors(codeMirror, filePath) {
+    function analizeErrors(codeMirror, filePath, useCargo) {
+        console.log('arguments:', arguments);
+
         getLintErrors(filePath, function (error) {
             if (error.length > 0) {
                 addError(codeMirror, error);
@@ -121,18 +123,16 @@ define(function (require, exports, module) {
         }
     }
 
-    ProjectManager.on('projectOpen', function (e, project) {
-        currentProject = project;
-    });
-
     // TO-DO: rewrite it
     function init() {
         var isCrateFlag = false;
         var useCargo = false;
 
         ProjectManager.on('projectOpen', function (e, project) {
-            //isCrateFlag = isCrate();
-            currentProject = project;
+            isCrate().done(function(b){
+                isCrateFlag = b;
+                currentProject = project;
+            });
         });
 
         if (EditorManager) {
@@ -143,7 +143,7 @@ define(function (require, exports, module) {
                 if (currentDocument) {
                     if (currentDocument.language._name === 'Rust') {
                         //TO-DO: use cargo to lint if it's a crate and currentDocument in the currentProject's directory;
-                        useCargo = isCrateFlag && (currentDocument.file._path.indexOf(currentDocument._path) === 0);
+                        useCargo = isCrateFlag && (currentDocument.file._path.indexOf(currentProject._path) === 0);
 
                         codeMirror = registerGutter();
                         analizeErrors(codeMirror, currentDocument.file._path, useCargo);
