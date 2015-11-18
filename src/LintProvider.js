@@ -48,11 +48,8 @@ define(function (require, exports, module) {
         return deferred.promise();
     }
 
-
-    function parserError(data, cb) {
-        console.log('RustLint errors: ', data);
-
-        inspectionErrors = data.split(/(?:\r\n|\r|\n)/g)
+    function parserError(data) {
+        return data.split(/(?:\r\n|\r|\n)/g)
             .map(function (message) {
                 var match = pattern.exec(message);
                 if (match) {
@@ -73,9 +70,6 @@ define(function (require, exports, module) {
             }).filter(function (message) {
                 return message !== undefined;
             });
-
-        CodeInspection.requestRun();
-        cb(inspectionErrors);
     }
 
     // TO-DO: `--lib or --bin NAME`
@@ -84,7 +78,10 @@ define(function (require, exports, module) {
         console.log('cmd:', cmd);
         node.domains.rustlint.commander(cmd)
             .done(function (data) {
-                parserError(data, cb);
+                console.log('RustLint errors: ', data);
+                inspectionErrors = parserError(data);
+                CodeInspection.requestRun();
+                cb(inspectionErrors);
             }).fail(function (err) {
                 console.error(domain, err);
             });
@@ -93,7 +90,7 @@ define(function (require, exports, module) {
     function analizeErrors(codeMirror, filePath, useCargo) {
         getLintErrors(filePath, useCargo, function (error) {
             if (error.length > 0) {
-                addError(codeMirror, error);
+                addGutters(codeMirror, error);
             } else {
                 codeMirror.clearGutter("rust-linter-gutter");
             }
@@ -118,7 +115,7 @@ define(function (require, exports, module) {
         return marker[0];
     }
 
-    function addError(cm, error) {
+    function addGutters(cm, error) {
         console.log(domain + 'error:', error);
         for (var i = 0; i < error.length; i++) {
             var marker = makeMarker(error[i].type);
