@@ -25,7 +25,6 @@ define(function (require, exports, module) {
         AppInit.appReady(init);
     }
 
-
     function normalizePath(path) {
         return path.replace(/[\/\\]/g, "/");
     }
@@ -55,9 +54,6 @@ define(function (require, exports, module) {
     }
 
     // TO-DO: `--lib or --bin NAME`
-    /**
-     * return a promise resolved with parsed errors
-     */
     function getLintErrors(filePath, useCargo, manifest) {
         var errors,
             deferred = new $.Deferred(),
