@@ -10,11 +10,8 @@ define(function (require, exports, module) {
         NodeConnection = brackets.getModule('utils/NodeConnection'),
         ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         ProjectManager = brackets.getModule('project/ProjectManager'),
-        node = new NodeConnection(),
-        inspectionErrors = [];
+        node = new NodeConnection();
 
-    var domain = '[RustLint]: ';
-    var currentProject = {};
     var pattern = /^(.+?):(\d+):(\d+):\s+(\d+):(\d+)\s(error|fatal error|warning):\s+(.+)/;
 
     if (!node.domains.rustlint) {
@@ -28,33 +25,17 @@ define(function (require, exports, module) {
         AppInit.appReady(init);
     }
 
-    // return a promise resolved with true if current project is a crate(with 'Cargo.toml')
-    function isCrate() {
-        var deferred = new $.Deferred;
-        ProjectManager.getAllFiles(ProjectManager.getLanguageFilter('toml')).done(function (files) {
-            var names = files.map(function (file) {
-                return file._name;
-            });
-
-            if (names.indexOf('Cargo.toml') > -1) {
-                deferred.resolve(true);
-            }
-            deferred.resolve(false);
-        });
-
-        return deferred.promise();
+    function normalizePath(path) {
+        return path.replace(/[\/\\]/g, "/");
     }
 
-
-    function parserError(data, cb) {
-        console.log('RustLint errors: ', data);
-
-        inspectionErrors = data.split(/(?:\r\n|\r|\n)/g)
+    function parserError(data, lintFile) {
+        return data.split(/(?:\r\n|\r|\n)/g)
             .map(function (message) {
                 var match = pattern.exec(message);
                 if (match) {
                     return {
-                        file: match[1],
+                        file: normalizePath(match[1]),
                         pos: {
                             line: match[2] - 1,
                             ch: match[3]
@@ -67,45 +48,38 @@ define(function (require, exports, module) {
                         message: match[7]
                     };
                 }
-            }).filter(function (message) {
-                return message !== undefined;
+            }).filter(function (error) {
+                return (error !== undefined) && (error.file === lintFile);
             });
-
-        CodeInspection.requestRun();
-        cb(inspectionErrors);
     }
 
-    // TO-DO: `cargo rustc -Zno-trans` to lint crate
-    function getLintErrors(filePath, cb) {
-        node.domains.rustlint.commander('rustc -Z no-trans "' + filePath + '"')
+    // TO-DO: `--lib or --bin NAME`
+    function getLintErrors(filePath, useCargo, manifest) {
+        var errors,
+            deferred = new $.Deferred(),
+            cmd = useCargo ? 'cargo rustc -Zno-trans --manifest-path ' + manifest : 'rustc -Z no-trans ' + filePath;
+
+        node.domains.rustlint.commander(cmd)
             .done(function (data) {
-                parserError(data, cb);
+                errors = parserError(data, filePath);
+                deferred.resolve(errors);
             }).fail(function (err) {
-                console.error(domain, err);
+                console.error('RustLint: ', err);
+                deferred.reject(null);
             });
-    }
 
-    function analizeErrors(codeMirror, filePath, useCargo) {
-        console.log('arguments:', arguments);
-
-        getLintErrors(filePath, function (error) {
-            if (error.length > 0) {
-                addError(codeMirror, error);
-            } else {
-                codeMirror.clearGutter("rust-linter-gutter");
-            }
-        });
+        return deferred.promise();
     }
 
     function registerGutter() {
         var currentEditor = EditorManager.getActiveEditor(),
-            codeMirror = currentEditor._codeMirror,
-            gutters = codeMirror.getOption("gutters").slice(0);
+            cm = currentEditor._codeMirror,
+            gutters = cm.getOption("gutters").slice(0);
         if (gutters.indexOf('rust-linter-gutter') === -1) {
             gutters.unshift('rust-linter-gutter');
-            codeMirror.setOption('gutters', gutters);
+            cm.setOption('gutters', gutters);
         }
-        return codeMirror;
+        return cm;
     }
 
     function makeMarker(type) {
@@ -115,57 +89,102 @@ define(function (require, exports, module) {
         return marker[0];
     }
 
-    function addError(cm, error) {
-        console.log(domain + 'error:', error);
-        for (var i = 0; i < error.length; i++) {
-            var marker = makeMarker(error[i].type);
-            cm.setGutterMarker(error[i].pos.line, 'rust-linter-gutter', marker);
+    function addMarkers(cm, errors) {
+        for (var i = 0; i < errors.length; i++) {
+            var marker = makeMarker(errors[i].type);
+            cm.setGutterMarker(errors[i].pos.line, 'rust-linter-gutter', marker);
         }
     }
 
-    // TO-DO: rewrite it
-    function init() {
-        var isCrateFlag = false;
-        var useCargo = false;
+    function updateMarkers(errors, cm) {
+        cm.clearGutter("rust-linter-gutter");
+        if (errors.length > 0) {
+            addMarkers(cm, errors);
+        }
+    }
 
-        ProjectManager.on('projectOpen', function (e, project) {
-            isCrate().done(function(b){
-                isCrateFlag = b;
-                currentProject = project;
+    var useCargo,
+        codeMirror,
+        manifestPath,
+        isCarte = null;
+
+    function fileInDirectory(filePath, directoryPath) {
+        return filePath.indexOf(directoryPath) === 0;
+    }
+
+    // return a promise resolved with manifest-path if current project is a crate(with 'Cargo.toml')
+    function locateManifest() {
+        var names, ti,
+            deferred = new $.Deferred();
+
+        ProjectManager.getAllFiles(ProjectManager.getLanguageFilter('toml')).done(function (files) {
+            names = files.map(function (file) {
+                return file._name;
+            });
+            ti = names.indexOf('Cargo.toml');
+            if (ti > -1) {
+                deferred.resolve({
+                    isCarte: true,
+                    manifestPath: files[ti]._path
+                });
+            } else {
+                deferred.resolve({
+                    isCarte: false,
+                    manifestPath: null
+                });
+            }
+        });
+        return deferred.promise();
+    }
+
+    function activeEditorChangeHandler() {
+        var currentProject, currentFilePath,
+            currentDocument = DocumentManager.getCurrentDocument();
+        if (currentDocument) {
+            if (currentDocument.language._name === 'Rust') {
+                currentFilePath = currentDocument.file._path;
+                codeMirror = registerGutter();
+                currentProject = ProjectManager.getProjectRoot();
+                if (isCarte === null) {
+                    locateManifest().done(function (result) {
+                        isCarte = result.isCarte;
+                        manifestPath = result.manifestPath;
+
+                        useCargo = isCarte && fileInDirectory(currentFilePath, currentProject._path);
+                        CodeInspection.requestRun();
+                    });
+                } else {
+                    useCargo = isCarte && fileInDirectory(currentFilePath, currentProject._path);
+                    CodeInspection.requestRun();
+                }
+            }
+        }
+
+    }
+
+    function projectOpenHandler() {
+        isCarte = null;
+    }
+
+    function linter(text, fullPath) {
+        var deferred = new $.Deferred();
+        getLintErrors(fullPath, useCargo, manifestPath).done(function (errors) {
+            updateMarkers(errors, codeMirror);
+            deferred.resolve({
+                errors: errors
             });
         });
 
-        if (EditorManager) {
-            EditorManager.on('activeEditorChange', function (event, EditorManager) {
-                var currentDocument = DocumentManager.getCurrentDocument(),
-                    codeMirror;
+        return deferred.promise();
+    }
 
-                if (currentDocument) {
-                    if (currentDocument.language._name === 'Rust') {
-                        //TO-DO: use cargo to lint if it's a crate and currentDocument in the currentProject's directory;
-                        useCargo = isCrateFlag && (currentDocument.file._path.indexOf(currentProject._path) === 0);
+    function init() {
+        CodeInspection.register("rust", {
+            name: "rustLint",
+            scanFileAsync: linter
+        });
 
-                        codeMirror = registerGutter();
-                        analizeErrors(codeMirror, currentDocument.file._path, useCargo);
-
-                        DocumentManager.on('documentSaved', function () {
-                            analizeErrors(codeMirror, currentDocument.file._path, useCargo);
-                        });
-                    } else {
-                        DocumentManager.off('documentSaved');
-                    }
-                }
-
-            });
-
-            CodeInspection.register("rust", {
-                name: "rustLint",
-                scanFile: function (text, fullPath) {
-                    return {
-                        errors: inspectionErrors
-                    };
-                }
-            });
-        }
+        ProjectManager.on('projectOpen', projectOpenHandler);
+        EditorManager.on('activeEditorChange', activeEditorChangeHandler);
     }
 });
