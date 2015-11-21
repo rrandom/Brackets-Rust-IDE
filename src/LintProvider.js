@@ -24,6 +24,7 @@ define(function (require, exports, module) {
 
         _nodeDomain.exec('getLint', cmd)
             .done(function (data) {
+                console.log('[RustLint]:\n', data);
                 errors = parserError(data, filePath);
                 deferred.resolve(errors);
             }).fail(function (err) {
