@@ -3,26 +3,35 @@ define(function (require, exports, module) {
 
     // TO-DO: inlineWidget
 
-    var AppInit = brackets.getModule('utils/AppInit'),
-        DocumentManager = brackets.getModule('document/DocumentManager'),
+    var DocumentManager = brackets.getModule('document/DocumentManager'),
         CodeInspection = brackets.getModule('language/CodeInspection'),
         EditorManager = brackets.getModule('editor/EditorManager'),
-        NodeConnection = brackets.getModule('utils/NodeConnection'),
+        NodeDomain = brackets.getModule("utils/NodeDomain"),
         ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
-        ProjectManager = brackets.getModule('project/ProjectManager'),
-        node = new NodeConnection();
+        ProjectManager = brackets.getModule('project/ProjectManager');
 
     var pattern = /^(.+?):(\d+):(\d+):\s+(\d+):(\d+)\s(error|fatal error|warning):\s+(.+)/;
 
-    if (!node.domains.rustlint) {
-        node.connect(true).done(function () {
-            var path = ExtensionUtils.getModulePath(module, 'node/LintDomain.js');
-            node.loadDomains([path], true).done(function () {
-                AppInit.appReady(init);
+    var _domainPath = ExtensionUtils.getModulePath(module, 'node/LintDomain');
+
+    var _nodeDomain = new NodeDomain('rustLint', _domainPath);
+
+    // TO-DO: `--lib or --bin NAME`
+    function getLintErrors(filePath, useCargo, manifest) {
+        var errors,
+            deferred = new $.Deferred(),
+            cmd = useCargo ? 'cargo rustc -Zno-trans --manifest-path ' + manifest : 'rustc -Z no-trans ' + filePath;
+
+        _nodeDomain.exec('getLint', cmd)
+            .done(function (data) {
+                errors = parserError(data, filePath);
+                deferred.resolve(errors);
+            }).fail(function (err) {
+                console.error('RustLint: ', err);
+                deferred.reject(null);
             });
-        });
-    } else {
-        AppInit.appReady(init);
+
+        return deferred.promise();
     }
 
     function normalizePath(path) {
@@ -53,23 +62,7 @@ define(function (require, exports, module) {
             });
     }
 
-    // TO-DO: `--lib or --bin NAME`
-    function getLintErrors(filePath, useCargo, manifest) {
-        var errors,
-            deferred = new $.Deferred(),
-            cmd = useCargo ? 'cargo rustc -Zno-trans --manifest-path ' + manifest : 'rustc -Z no-trans ' + filePath;
-
-        node.domains.rustlint.commander(cmd)
-            .done(function (data) {
-                errors = parserError(data, filePath);
-                deferred.resolve(errors);
-            }).fail(function (err) {
-                console.error('RustLint: ', err);
-                deferred.reject(null);
-            });
-
-        return deferred.promise();
-    }
+    // ------ gutter ---
 
     function registerGutter() {
         var currentEditor = EditorManager.getActiveEditor(),
@@ -102,6 +95,8 @@ define(function (require, exports, module) {
             addMarkers(cm, errors);
         }
     }
+
+    // ---- end gutter ----
 
     var useCargo,
         codeMirror,
@@ -187,4 +182,6 @@ define(function (require, exports, module) {
         ProjectManager.on('projectOpen', projectOpenHandler);
         EditorManager.on('activeEditorChange', activeEditorChangeHandler);
     }
+
+    exports.init = init;
 });

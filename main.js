@@ -38,9 +38,8 @@ define(function (require, exports, module) {
     var RacerSettings = require("src/dialogs/RacerSettings"),
         RacerProviders = require("src/RacerProviders"),
         QuickOpenPlugin = require("src/QuickOpenPlugin"),
-        SyntaxColoring = require("src/SyntaxColoring");
-
-    var Lint = require("src/LintProvider");
+        SyntaxColoring = require("src/SyntaxColoring"),
+        LintProvider = require("src/LintProvider");
 
     function startup() {
         try {
@@ -76,6 +75,8 @@ define(function (require, exports, module) {
 
             CodeHintManager.registerHintProvider(rustHintProvider, ["rust"], 10);
             EditorManager.registerInlineEditProvider(rustDefinitionProvider.provider);
+
+            LintProvider.init();
 
             console.info('Registered Rust Providers');
         } catch (e) {
