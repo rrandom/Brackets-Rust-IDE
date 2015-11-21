@@ -20,15 +20,13 @@ define(function (require, exports, module) {
     var MultiRangeInlineEditor = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
         DocumentManager = brackets.getModule("document/DocumentManager"),
         FileSystem = brackets.getModule('filesystem/FileSystem'),
-        //FileUtils = brackets.getModule('file/FileUtils'),
-        StringUtils = brackets.getModule("utils/StringUtils"),
         _ = brackets.getModule("thirdparty/lodash");
 
     var RacerCli = require('src/RacerCli');
 
-    var vpet = 0,
-        extName = 'RustIDE';
+    var vpet = 0;
 
+    // TO-DO: css style for different hint type
     function RustHintProvider() {
 
         var _prefix, _cm, _lastToken,
@@ -55,9 +53,8 @@ define(function (require, exports, module) {
             _end_tokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
 
         function _extractHints(data) {
-            var i, t,
-                rs = [],
-                ta = data.split('\n');
+            var rs = [],
+                ta = data.split(/(?:\r\n|\r|\n)/g);
 
             _prefix = ta.shift().split(',').pop();
             ta.pop();
@@ -173,7 +170,7 @@ define(function (require, exports, module) {
             }
         };
 
-        $(RacerCli.nodeConnection).on("RacerDomain:hintUpdate", function (evt, data, petition) {
+        RacerCli.nodeConnection.on("RacerDomain:hintUpdate", function (evt, data, petition) {
             if (petition === vpet) {
                 if (data === 'PANIC PANIC PANIC\n') {
                     data = '';
@@ -213,7 +210,6 @@ define(function (require, exports, module) {
                 }
             }
 
-            //return startLine + 10;
             return l;
         }
 
@@ -277,7 +273,7 @@ define(function (require, exports, module) {
             }
             var fpath = hostEditor.document.file.fullPath;
 
-            $(RacerCli.nodeConnection).on("RacerDomain:defFound", function (evt, data, petition) {
+            RacerCli.nodeConnection.on("RacerDomain:defFound", function (evt, data, petition) {
                 if (data === 'PANIC PANIC PANIC\n') {
                     data = '';
                 }
