@@ -102,7 +102,7 @@ define(function (require, exports, module) {
     var useCargo,
         codeMirror,
         manifestPath,
-        isCarte = null;
+        isCrate = null;
 
     function fileInDirectory(filePath, directoryPath) {
         return filePath.indexOf(directoryPath) === 0;
@@ -120,12 +120,12 @@ define(function (require, exports, module) {
             ti = names.indexOf('Cargo.toml');
             if (ti > -1) {
                 deferred.resolve({
-                    isCarte: true,
+                    isCrate: true,
                     manifestPath: files[ti]._path
                 });
             } else {
                 deferred.resolve({
-                    isCarte: false,
+                    isCrate: false,
                     manifestPath: null
                 });
             }
@@ -141,16 +141,16 @@ define(function (require, exports, module) {
                 currentFilePath = currentDocument.file._path;
                 codeMirror = registerGutter();
                 currentProject = ProjectManager.getProjectRoot();
-                if (isCarte === null) {
+                if (isCrate === null) {
                     locateManifest().done(function (result) {
-                        isCarte = result.isCarte;
+                        isCrate = result.isCrate;
                         manifestPath = result.manifestPath;
 
-                        useCargo = isCarte && fileInDirectory(currentFilePath, currentProject._path);
+                        useCargo = isCrate && fileInDirectory(currentFilePath, currentProject._path);
                         CodeInspection.requestRun();
                     });
                 } else {
-                    useCargo = isCarte && fileInDirectory(currentFilePath, currentProject._path);
+                    useCargo = isCrate && fileInDirectory(currentFilePath, currentProject._path);
                     CodeInspection.requestRun();
                 }
             }
@@ -159,7 +159,7 @@ define(function (require, exports, module) {
     }
 
     function projectOpenHandler() {
-        isCarte = null;
+        isCrate = null;
     }
 
     function linter(text, fullPath) {
