@@ -8,7 +8,7 @@
 	"license": "MIT",
 	"categories": "language",
 	"engines": {
-		"brackets": ">=0.24.0"
+		"brackets": ">=1.5.0"
 	},
 	"keywords": ["Rust", "IDE", "language"]
 }

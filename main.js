@@ -38,7 +38,6 @@ define(function (require, exports, module) {
     var RacerSettings = require("src/dialogs/RacerSettings"),
         RacerProviders = require("src/RacerProviders"),
         QuickOpenPlugin = require("src/QuickOpenPlugin"),
-        SyntaxColoring = require("src/SyntaxColoring"),
         LintProvider = require("src/LintProvider");
 
     function startup() {
