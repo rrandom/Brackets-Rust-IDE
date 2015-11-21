@@ -3,8 +3,7 @@ define(function (require, exports, module) {
 
     // TO-DO: inlineWidget
 
-    var AppInit = brackets.getModule('utils/AppInit'),
-        DocumentManager = brackets.getModule('document/DocumentManager'),
+    var DocumentManager = brackets.getModule('document/DocumentManager'),
         CodeInspection = brackets.getModule('language/CodeInspection'),
         EditorManager = brackets.getModule('editor/EditorManager'),
         NodeDomain = brackets.getModule("utils/NodeDomain"),
@@ -184,5 +183,5 @@ define(function (require, exports, module) {
         EditorManager.on('activeEditorChange', activeEditorChangeHandler);
     }
 
-    AppInit.appReady(init);
+    exports.init = init;
 });
