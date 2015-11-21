@@ -1,9 +1,9 @@
 {
 	"name": "rrandom.rust-ide",
 	"title": "Rust IDE",
-	"description": "Help coding Rust in Brackets, autocomplete, quick-edit, syntax highlight",
+	"description": "Help coding Rust in Brackets: lint, autocomplete, quick-edit, syntax highlight",
 	"homepage": "https://github.com/rrandom/Brackets-Rust-IDE",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"author": "Rrandom <emannonhere@gmail.com> (https://github.com/rrandom)",
 	"license": "MIT",
 	"categories": "language",
