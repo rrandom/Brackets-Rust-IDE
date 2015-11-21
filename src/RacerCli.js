@@ -2,11 +2,7 @@
  *
  * Licensed under MIT
  *
- * Modified from https://github.com/David5i6/Brackets-Go-IDE
- *
- *
- *  https://codemirror.net/doc/manual.html
- *  https://github.com/adobe/brackets/wiki/Brackets-Node-Process:-Overview-for-Developers
+ * base on https://github.com/David5i6/Brackets-Go-IDE
  *
  */
 
