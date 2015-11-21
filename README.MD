@@ -25,7 +25,7 @@ quick-edit now search function endline based on your rust code indentation, the 
 
 
 #### Credits
-1. [David5i6](https://github.com/David5i6/Brackets-Go-IDE)
-2. [mackenza](https://github.com/mackenza/Brackets-PHP-SmartHints)
-3. [JSUtils](https://github.com/adobe/brackets/blob/5ef84133cb8c5acdcb7e80b85bbee86f65c2c9b1/src/language/JSUtils.js)
-4. [phoenix3008](https://github.com/phoenix3008/brackets-phplinter)
+- [David5i6](https://github.com/David5i6/Brackets-Go-IDE)
+- [mackenza](https://github.com/mackenza/Brackets-PHP-SmartHints)
+- [JSUtils](https://github.com/adobe/brackets/blob/5ef84133cb8c5acdcb7e80b85bbee86f65c2c9b1/src/language/JSUtils.js)
+- [phoenix3008](https://github.com/phoenix3008/brackets-phplinter)
