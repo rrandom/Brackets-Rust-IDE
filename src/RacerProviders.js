@@ -20,6 +20,7 @@ define(function (require, exports, module) {
     var MultiRangeInlineEditor = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
         DocumentManager = brackets.getModule("document/DocumentManager"),
         FileSystem = brackets.getModule('filesystem/FileSystem'),
+        CodeMirror = brackets.getModule("thirdparty/CodeMirror/lib/codemirror"),
         _ = brackets.getModule("thirdparty/lodash");
 
     var RacerCli = require('src/RacerCli');
@@ -194,27 +195,47 @@ define(function (require, exports, module) {
 
         var _$deferred;
 
-        // compute the end line of a definiton(function), get base on identation;
-        // a very simple apporach, maybe buggy
-        // TO-DO: consider use codemirror codefold addon to find the def endline
-        function _getDefEndLine(txt, startLine) {
-            var lines = txt.split('\n'),
-                firstLine = lines[startLine - 1],
-                i = 0,
-                l = 0;
-            for (i = 0; i < firstLine.length; i++) {
-                if ([' ', '\t'].indexOf(firstLine[i]) < 0) {
-                    break;
-                }
-            }
+        // FIX-ME: use CodeMirror findMatchingBracket method to find end line.
+        // have bug
+        // CodeMirror' line and ch both start from 0, but brackets' start from 1, so is racer's
+        function _getDefEndLine(txt, startLine, ch) {
+            var result,
+                tmpCm = CodeMirror($('<tmpdiv>')[0], {
+                    value: txt,
+                    mode: 'rust'
+                });
 
-            for (l = startLine; l < lines.length; l++) {
-                if (lines[l][i] === '}') {
-                    break;
-                }
-            }
+            var pos = CodeMirror.Pos(startLine-1, ch-1);
+            console.log('pos:', pos);
 
-            return l;
+            console.log('Token:', tmpCm.getTokenAt(pos));
+
+            result = tmpCm.findMatchingBracket(pos, false);
+
+            console.log('result', result);
+
+            if (result) {
+                return result.to.line + 1;
+            } else {
+                console.log('error when _getDefEndLine');
+                var lines = txt.split('\n'),
+                    firstLine = lines[startLine - 1],
+                    i = 0,
+                    l = 0;
+                for (i = 0; i < firstLine.length; i++) {
+                    if ([' ', '\t'].indexOf(firstLine[i]) < 0) {
+                        break;
+                    }
+                }
+
+                for (l = startLine; l < lines.length; l++) {
+                    if (lines[l][i] === '}') {
+                        break;
+                    }
+                }
+
+                return l;
+            }
         }
 
         function _resolveDef(data, hostEditor) {
@@ -244,7 +265,7 @@ define(function (require, exports, module) {
                 DocumentManager.getDocumentForPath(path).done(function (doc) {
                     var lineStart = Number(fun_item.line),
                         // doc._text might be null
-                        lineEnd = _getDefEndLine(doc._text || doc.file._contents, lineStart);
+                        lineEnd = _getDefEndLine(doc._text || doc.file._contents, lineStart, fun_item.first_line.length);
 
                     var ranges = [
                         {
