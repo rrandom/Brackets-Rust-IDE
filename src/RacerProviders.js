@@ -34,7 +34,7 @@ define(function (require, exports, module) {
             _cachedHints = null,
             _previousTokenStr = "--dummy--",
             // keywords: https://doc.rust-lang.org/grammar.html#keywords
-            _rust_keywords = ["abstract", "alignof", "as", "become", "box", "break",
+            _rustKeywords = ["abstract", "alignof", "as", "become", "box", "break",
                          "const", "continue", "crate", "do", "else", "enum",
                          "extern", "false", "final", "fn", "for", "if", "impl",
                          "in", "let", "loop", "macro", "match", "mod", "move",
@@ -43,14 +43,26 @@ define(function (require, exports, module) {
                          "struct", "super", "trait", "true", "type", "typeof", "unsafe",
                          "unsized", "use", "virtual", "where", "while", "yield"],
             // std library macros: https://doc.rust-lang.org/nightly/std/index.html#macros
-            _std_macros = ["assert!", "assert_eq!", "cfg!", "column!", "concat!",
+            _stdMacros = ["assert!", "assert_eq!", "cfg!", "column!", "concat!",
 					  "contat_idents!", "debug_assert!", "debug_assert_eq!",
 					  "env!", "file!", "format!", "format_args!", "include!",
 					  "include_bytes!", "include_str!", "line!", "module_path!",
 					  "option_env!", "panic!", "print!", "println!", "scoped_thread_local!",
 					  "select!", "stringify!", "thread_local!", "try!", "unimplemented!",
 					  "unreachable!", "vec!", "write!", "writeln!"],
-            _end_tokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
+            _endTokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
+
+        var auxiliaryHints = _rustKeywords.map(function (s) {
+            return {
+                str: s,
+                type: 'Keyword'
+            };
+        }).concat(_stdMacros.map(function (s) {
+            return {
+                str: s,
+                type: 'Macro'
+            };
+        }));
 
         function _extractHints(data) {
             var rs = [],
@@ -62,7 +74,7 @@ define(function (require, exports, module) {
             try {
                 ta.pop();
                 rs = ta.map(function (i) {
-                    return RacerCli.parse(i).name;
+                    return RacerCli.parse(i);
                 });
             } catch (e) {
                 console.error('[RustHintProvider] extractHints: Please notify me if you see this error');
@@ -74,7 +86,7 @@ define(function (require, exports, module) {
         function _validToken(implicitChar) {
             if (implicitChar) {
                 var code = implicitChar.charCodeAt(0);
-                return (_end_tokens.indexOf(implicitChar) === -1) && (code !== 13) && (code !== 9);
+                return (_endTokens.indexOf(implicitChar) === -1) && (code !== 13) && (code !== 9);
             } else {
                 return false;
             }
@@ -89,29 +101,18 @@ define(function (require, exports, module) {
 
         function _resolveCachedHint(cachedHints, token) {
             _prefix = token.string;
+            var hintsList = cachedHints.concat(auxiliaryHints),
+                results = [];
 
-            var hintsList = cachedHints.concat(_rust_keywords, _std_macros);
-            var filteredHints = hintsList.filter(function (h) {
-                return h.substring(0, _prefix.length) === _prefix;
-            }).map(function (h) {
-                if (_.contains(_rust_keywords, h)) {
-                    return $('<span>').addClass("RustIDE-hints")
-                        .addClass("RustIDE-hints-keywords")
-                        .text(h);
-
-                } else if (_.contains(_std_macros, h)) {
-                    return $('<span>').addClass("RustIDE-hints")
-                        .addClass("RustIDE-hints-macros")
-                        .text(h);
-                } else {
-                    return $('<span>').addClass("RustIDE-hints")
-                        .addClass("RustIDE-hints-fn")
-                        .text(h);
+            for (var i = 0; i < hintsList.length; i++) {
+                if (_.startsWith(hintsList[i].str, _prefix)) {
+                    results.push($('<span>').addClass('RustIDE-hints')
+                        .addClass('RustIDE-hints-' + hintsList[i].type)
+                        .text(hintsList[i].str));
                 }
-            });
-
+            }
             return {
-                hints: filteredHints,
+                hints: results,
                 match: '',
                 selectInitial: true,
                 handleWideResults: false

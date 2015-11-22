@@ -66,12 +66,12 @@ define(function (require, exports, module) {
         try {
             var tmp = str.split(',');
             result = {
-                name: tmp[0].split(' ')[1],
+                str: tmp[0].split(' ')[1],
                 line: tmp[1],
                 char: tmp[2],
                 path: tmp[3],
                 type: tmp[4],
-                first_line: tmp[5]
+                firstLine: tmp[5]
             };
         } catch (e) {
             console.error("[RacerDomain] Error when parse: ", e);
