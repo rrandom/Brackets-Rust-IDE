@@ -265,7 +265,7 @@ define(function (require, exports, module) {
                 DocumentManager.getDocumentForPath(path).done(function (doc) {
                     var lineStart = Number(fun_item.line),
                         // doc._text might be null
-                        lineEnd = _getDefEndLine(doc._text || doc.file._contents, lineStart, fun_item.first_line.length);
+                        lineEnd = _getDefEndLine(doc._text || doc.file._contents, lineStart, fun_item.firstLine.length);
 
                     var ranges = [
                         {
