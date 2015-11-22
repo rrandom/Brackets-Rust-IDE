@@ -60,11 +60,11 @@
             });
 
             racer.stderr.on('data', function (e) {
-                console.info(extName + 'stderr: ' + e);
+                console.error(extName + 'stderr: ' + e);
             });
 
             racer.on('close', function (code) {
-                _domainManager.emitEvent(domainName, args.event, [output, petition]);
+                return output;
             });
 
             racer.unref();
@@ -74,16 +74,16 @@
     }
 
     // args: {txt, line, char, path}
-    function cmdGetHint(racerPath, args, petition) {
+    function cmdGetHint(racerPath, args, petition, cb) {
         args.command = 'complete';
         args.event = 'hintUpdate';
-        racerCli(racerPath, args, petition);
+        cb(racerCli(racerPath, args, petition));
     }
 
-    function cmdFindDefinition(racerPath, args, petition) {
+    function cmdFindDefinition(racerPath, args, petition, cb) {
         args.command = 'find-definition';
         args.event = 'defFound';
-        racerCli(racerPath, args, petition);
+        cb(racerCli(racerPath, args, petition));
     }
 
     function init(domainManager) {
@@ -99,7 +99,7 @@
             domainName, // domain name
             "getHint", // command name
             cmdGetHint, // command handler function
-            false, // asynchronous
+            true, // asynchronous
             "Return Rust Hints", [
                 {
                     name: "racerPath",
@@ -123,7 +123,7 @@
             domainName,
             "findDef",
             cmdFindDefinition,
-            false,
+            true,
             "Return found definitions", [
                 {
                     name: "racerPath",

@@ -50,7 +50,7 @@ define(function (require, exports, module) {
 					  "option_env!", "panic!", "print!", "println!", "scoped_thread_local!",
 					  "select!", "stringify!", "thread_local!", "try!", "unimplemented!",
 					  "unreachable!", "vec!", "write!", "writeln!"],
-            _endTokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ':', ',', '<', '>', '.', '{', '}'];
+            _endTokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ',', '<', '>', '.', '{', '}'];
 
         var auxiliaryHints = _rustKeywords.map(function (s) {
             return {
@@ -122,6 +122,7 @@ define(function (require, exports, module) {
         this.hasHints = function (editor, implicitChar) {
             _cm = editor._codeMirror;
             if (_validToken(implicitChar)) {
+                console.log('hasHints');
                 return true;
             } else {
                 _needNewHints = true;
@@ -139,10 +140,12 @@ define(function (require, exports, module) {
             //implicitChar is null when press Backspace
             if (_validToken(implicitChar) || _validToken(_lastToken.string)) {
                 var tokenType = _lastToken.type;
+                console.log('_lastToken:', _lastToken);
                 if (['string', 'comment', 'meta', 'def'].indexOf(tokenType) > -1) {
                     return false;
                 } else {
-                    if ((_needNewHints) || (_previousTokenStr[0] !== _lastToken.string[0])) {
+                    console.log('_needNewHints:', _needNewHints);
+                    if ((_needNewHints) || (_previousTokenStr[0] !== _lastToken.string[0]) || implicitChar === ':') {
                         console.info('Asking Hints');
                         _needNewHints = true;
                         _cachedHints = null;

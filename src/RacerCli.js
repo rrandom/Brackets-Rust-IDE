@@ -40,9 +40,13 @@ define(function (require, exports, module) {
             path: extPath,
             isPathTmp: true
         };
-        RacerDomain.exec("getHint", prefs.get("racerPath"), args, vpet).fail(function (err) {
+        var $deferred = new $.Deferred();
+        RacerDomain.exec("getHint", prefs.get("racerPath"), args, vpet).done(function(data){
+            $deferred.resolve(data);
+        }).fail(function (err) {
             console.error('[RacerDomain] Fail to get hints: ', err);
         });
+        return $deferred;
     }
 
     function getDefD(txt, pos, vpet, path) {
@@ -54,7 +58,9 @@ define(function (require, exports, module) {
             isPathTmp: false
         };
         var $deferred = new $.Deferred();
-        RacerDomain.exec("findDef", prefs.get("racerPath"), args, vpet).fail(function (err) {
+        RacerDomain.exec("findDef", prefs.get("racerPath"), args, vpet).done(function(data){
+            $deferred.resolve(data);
+        }).fail(function (err) {
             console.error('[RacerDomain] Fail to get Def: ', err);
         });
         return $deferred;
