@@ -20,6 +20,7 @@ define(function (require, exports, module) {
     var MultiRangeInlineEditor = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
         DocumentManager = brackets.getModule("document/DocumentManager"),
         FileSystem = brackets.getModule('filesystem/FileSystem'),
+        StringUtils = brackets.getModule('utils/StringUtils'),
         CodeMirror = brackets.getModule("thirdparty/CodeMirror/lib/codemirror"),
         _ = brackets.getModule("thirdparty/lodash");
 
@@ -93,31 +94,55 @@ define(function (require, exports, module) {
             }
         }
 
-        function _resolveHint(data, petition) {
-            if (petition === vpet) {
-                var racerHintsList = _extractHints(data);
-                _cachedHints = racerHintsList;
-            }
-        }
-
         function _resolveCachedHint(cachedHints, token) {
             _prefix = token.string;
-            var hintsList = cachedHints.concat(auxiliaryHints),
+            var hintsList = [],
                 results = [];
+
+            if (_prefix === ':') {
+                _prefix = '';
+                hintsList = cachedHints;
+            } else {
+                hintsList = cachedHints.concat(auxiliaryHints);
+            }
+
 
             for (var i = 0; i < hintsList.length; i++) {
                 if (_.startsWith(hintsList[i].str, _prefix)) {
+                    var displayName = hintsList[i].str.replace(
+                        new RegExp(StringUtils.regexEscape(_prefix), "i"),
+                        "<strong>$&</strong>"
+                    );
                     results.push($('<span>').addClass('RustIDE-hints')
                         .addClass('RustIDE-hints-' + hintsList[i].type)
-                        .text(hintsList[i].str));
+                        .html(displayName));
                 }
             }
             return {
                 hints: results,
                 match: '',
                 selectInitial: true,
-                handleWideResults: false
+                handleWideResults: true
             };
+        }
+
+        function _resolveHint(deferredhints, token) {
+            var deferred = new $.Deferred(),
+                hintList;
+            deferredhints.done(function (data) {
+                console.log('data:', data);
+                hintList = _extractHints(data);
+                _cachedHints = hintList;
+                console.log('hintList:', hintList);
+                console.log('token:', token);
+                var result = _resolveCachedHint(hintList, token);
+                console.log('result:', result);
+                deferred.resolve(result);
+            }).fail(function (e) {
+                console.error('e:', e);
+            });
+
+            return deferred;
         }
 
         this.hasHints = function (editor, implicitChar) {
@@ -145,19 +170,22 @@ define(function (require, exports, module) {
                 if (['string', 'comment', 'meta', 'def'].indexOf(tokenType) > -1) {
                     return false;
                 } else {
+                    _needNewHints = true;
                     console.log('_needNewHints:', _needNewHints);
                     if ((_needNewHints) || (_previousTokenStr[0] !== _lastToken.string[0]) || implicitChar === ':') {
-                        console.info('Asking Hints');
+                        console.info('Asking Hints----------------');
                         _needNewHints = true;
                         _cachedHints = null;
                         _previousTokenStr = _lastToken.string;
-                        return RacerCli.getHintsD(txt, cursor, ++vpet);
+                        return _resolveHint(RacerCli.getHintsD(txt, cursor, ++vpet), _lastToken);
                     }
 
+                    /*
                     if (_cachedHints) {
                         return _resolveCachedHint(_cachedHints, _lastToken);
 
                     }
+                    */
                     return false;
                 }
             } else {
@@ -174,21 +202,6 @@ define(function (require, exports, module) {
                 _cm.replaceSelection($hint.text().substring(_prefix.length));
             }
         };
-
-        RacerCli.nodeConnection.on("RacerDomain:hintUpdate", function (evt, data, petition) {
-            if (petition === vpet) {
-                if (data === 'PANIC PANIC PANIC\n') {
-                    data = '';
-                }
-                console.info('#### On update event, data: ' + data);
-                if (data) {
-                    _needNewHints = false;
-                    _resolveHint(data, petition);
-                } else {
-                    console.warn("No matching");
-                }
-            }
-        });
     }
 
     function RustDefinitionProvider() {
@@ -205,7 +218,7 @@ define(function (require, exports, module) {
                     mode: 'rust'
                 });
 
-            var pos = CodeMirror.Pos(startLine-1, ch-1);
+            var pos = CodeMirror.Pos(startLine - 1, ch - 1);
             console.log('pos:', pos);
 
             console.log('Token:', tmpCm.getTokenAt(pos));
