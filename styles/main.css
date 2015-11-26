@@ -52,6 +52,21 @@
     background-color: darkgreen;
 }
 
+.RustIDE-hints-Enum:before {
+    content: "E";
+    background-color: darkkhaki;
+}
+
+.RustIDE-hints-Let:before {
+    content: "L";
+    background-color: darkorange;
+}
+
+.RustIDE-hints-EnumVariant:before {
+    content: "EV";
+    background-color: darkslateblue;
+}
+
 .CodeMirror .rust-linter-gutter {
     width: 20px;
 }
