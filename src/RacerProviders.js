@@ -127,9 +127,9 @@ define(function (require, exports, module) {
             };
         }
 
-        function resolveHints(deferredhints, token) {
+        function resolveHints(deferredData, token) {
             var deferred = new $.Deferred();
-            deferredhints.done(function (data) {
+            deferredData.done(function (data) {
                 console.log('data:', data);
                 var result,
                     parsedHintsList = extractHints(data);
@@ -196,10 +196,7 @@ define(function (require, exports, module) {
 
     function RustDefinitionProvider() {
 
-        var _$deferred;
-
         // FIX-ME: use CodeMirror findMatchingBracket method to find end line.
-        // have bug
         // CodeMirror' line and ch both start from 0, but brackets' start from 1, so is racer's
         function _getDefEndLine(txt, startLine, ch) {
             var result,
@@ -241,23 +238,27 @@ define(function (require, exports, module) {
             }
         }
 
-        function _resolveDef(data, hostEditor) {
-            var defs = data.split('\n'),
-                fun_item,
+        function resolveDefinition(deferredData, hostEditor) {
+            var deferred = new $.Deferred(),
+                defs,
+                defItem,
                 path;
 
-            // Don't provide def when racer returns END
-            if (defs[0] === 'END') {
-                _$deferred.reject();
-                return null;
-            } else {
+            deferredData.done(function(data){
+                defs = data.split('\n');
+                // Don't provide def when racer returns END
+                if (defs[0] === 'END') {
+                    deferred.reject();
+                    return null;
+                }
 
                 // only use the first match for simplicity
-                fun_item = RacerCli.parse(defs[0]);
-                path = fun_item.path;
+                defItem = RacerCli.parse(defs[0]);
+                path = defItem.path;
+
                 // Don't provide def when its a module
-                if (fun_item.type === 'Module') {
-                    _$deferred.reject();
+                if (defItem.type === 'Module') {
+                    deferred.reject();
                 }
 
                 // TO-DO: consider use FileUtils.convertWindowsPathToUnixPath();
@@ -266,14 +267,14 @@ define(function (require, exports, module) {
                 }
 
                 DocumentManager.getDocumentForPath(path).done(function (doc) {
-                    var lineStart = Number(fun_item.line),
+                    var lineStart = Number(defItem.line),
                         // doc._text might be null
-                        lineEnd = _getDefEndLine(doc._text || doc.file._contents, lineStart, fun_item.firstLine.length);
+                        lineEnd = _getDefEndLine(doc._text || doc.file._contents, lineStart, defItem.firstLine.length);
 
                     var ranges = [
                         {
                             document: doc,
-                            name: name,
+                            name: '',
                             lineStart: lineStart - 1,
                             lineEnd: lineEnd
                         }
@@ -281,14 +282,16 @@ define(function (require, exports, module) {
                     try {
                         var rustInlineEditor = new MultiRangeInlineEditor(ranges);
                         rustInlineEditor.load(hostEditor);
-                        _$deferred.resolve(rustInlineEditor);
+                        deferred.resolve(rustInlineEditor);
                     } catch (e) {
                         console.error("[RustDefinitionProvidre] Error of get def", e);
                     }
                 }).fail(function (e) {
                     console.error('[RustDefinitionProvidre] Error of get from path e:', e);
                 });
-            }
+            }).fail(function (e) {
+                console.error('e:', e);
+            });
         }
 
         this.provider = function (hostEditor, pos) {
@@ -300,20 +303,7 @@ define(function (require, exports, module) {
                 return null;
             }
             var fpath = hostEditor.document.file.fullPath;
-
-            RacerCli.nodeConnection.on("RacerDomain:defFound", function (evt, data, petition) {
-                if (data === 'PANIC PANIC PANIC\n') {
-                    data = '';
-                }
-                console.info('#### On defFind event, data: ' + data);
-                if (data) {
-                    _resolveDef(data, hostEditor);
-                } else {
-                    console.warn("Not Found Definition");
-                }
-            });
-            _$deferred = RacerCli.getDefD('', sel.start, ++vpet, fpath);
-            return _$deferred;
+            return resolveDefinition(RacerCli.getDefD('', sel.start, ++vpet, fpath), hostEditor);
         };
     }
 
