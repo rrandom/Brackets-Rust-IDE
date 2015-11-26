@@ -15,21 +15,16 @@ define(function (require, exports, module) {
 
     var ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         NodeDomain = brackets.getModule('utils/NodeDomain'),
-        NodeConnection = brackets.getModule('utils/NodeConnection'),
         PreferencesManager = brackets.getModule("preferences/PreferencesManager");
 
     var RacerDomain,
-        nodeConnection = new NodeConnection(),
-        connection = nodeConnection.connect(true),
         extPath = ExtensionUtils.getModulePath(module),
         prefs = PreferencesManager.getExtensionPrefs("Rust-IDE");
 
 
-    connection.done(function () {
-        RacerDomain = new NodeDomain('RacerDomain',
-            ExtensionUtils.getModulePath(module,
-                "node/RacerDomain"));
-    });
+    RacerDomain = new NodeDomain('RacerDomain',
+        ExtensionUtils.getModulePath(module,
+            "node/RacerDomain"));
 
 
     function getHintsD(txt, pos, vpet) {
@@ -41,7 +36,7 @@ define(function (require, exports, module) {
             isPathTmp: true
         };
         var $deferred = new $.Deferred();
-        RacerDomain.exec("getHint", prefs.get("racerPath"), args, vpet).done(function(data){
+        RacerDomain.exec("getHint", prefs.get("racerPath"), args, vpet).done(function (data) {
             $deferred.resolve(data);
         }).fail(function (err) {
             console.error('[RacerDomain] Fail to get hints: ', err);
@@ -58,7 +53,7 @@ define(function (require, exports, module) {
             isPathTmp: false
         };
         var $deferred = new $.Deferred();
-        RacerDomain.exec("findDef", prefs.get("racerPath"), args, vpet).done(function(data){
+        RacerDomain.exec("findDef", prefs.get("racerPath"), args, vpet).done(function (data) {
             $deferred.resolve(data);
         }).fail(function (err) {
             console.error('[RacerDomain] Fail to get Def: ', err);
@@ -86,8 +81,6 @@ define(function (require, exports, module) {
 
     }
 
-
-    exports.nodeConnection = nodeConnection;
     exports.getHintsD = getHintsD;
     exports.getDefD = getDefD;
     exports.parse = parse;
