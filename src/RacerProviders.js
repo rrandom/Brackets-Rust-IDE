@@ -123,7 +123,7 @@ define(function (require, exports, module) {
                 hints: results,
                 match: '',
                 selectInitial: true,
-                handleWideResults: true
+                handleWideResults: false
             };
         }
 
