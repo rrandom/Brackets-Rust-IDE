@@ -31,50 +31,52 @@ define(function (require, exports, module) {
     // TO-DO: css style for different hint type
     function RustHintProvider() {
 
-        var _prefix, _cm, _lastToken,
-            _needNewHints = true,
-            _cachedHints = null,
-            _previousTokenStr = "--dummy--",
-            // keywords: https://doc.rust-lang.org/grammar.html#keywords
-            _rustKeywords = ["abstract", "alignof", "as", "become", "box", "break",
-                         "const", "continue", "crate", "do", "else", "enum",
-                         "extern", "false", "final", "fn", "for", "if", "impl",
-                         "in", "let", "loop", "macro", "match", "mod", "move",
-                         "mut", "offsetof", "override", "priv", "proc", "pub",
-                         "pure", "ref", "return", "Self", "self", "sizeof", "static",
-                         "struct", "super", "trait", "true", "type", "typeof", "unsafe",
-                         "unsized", "use", "virtual", "where", "while", "yield"],
-            // std library macros: https://doc.rust-lang.org/nightly/std/index.html#macros
-            _stdMacros = ["assert!", "assert_eq!", "cfg!", "column!", "concat!",
-					  "contat_idents!", "debug_assert!", "debug_assert_eq!",
-					  "env!", "file!", "format!", "format_args!", "include!",
-					  "include_bytes!", "include_str!", "line!", "module_path!",
-					  "option_env!", "panic!", "print!", "println!", "scoped_thread_local!",
-					  "select!", "stringify!", "thread_local!", "try!", "unimplemented!",
-					  "unreachable!", "vec!", "write!", "writeln!"],
-            _endTokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ',', '<', '>', '.', '{', '}'];
+        var prefix, _cm, lastToken,
+            needNewHints = true,
+            cachedHints = null,
+            preTokenStr = "--dummy--",
 
-        var auxiliaryHints = _rustKeywords.map(function (s) {
+            // keywords: https://doc.rust-lang.org/grammar.html#keywords
+            rustKeywords = ["abstract", "alignof", "as", "become", "box", "break",
+                             "const", "continue", "crate", "do", "else", "enum",
+                             "extern", "false", "final", "fn", "for", "if", "impl",
+                             "in", "let", "loop", "macro", "match", "mod", "move",
+                             "mut", "offsetof", "override", "priv", "proc", "pub",
+                             "pure", "ref", "return", "Self", "self", "sizeof", "static",
+                             "struct", "super", "trait", "true", "type", "typeof", "unsafe",
+                             "unsized", "use", "virtual", "where", "while", "yield"],
+
+            // std library macros: https://doc.rust-lang.org/nightly/std/index.html#macros
+            stdMacros = ["assert!", "assert_eq!", "cfg!", "column!", "concat!",
+                          "contat_idents!", "debug_assert!", "debug_assert_eq!",
+                          "env!", "file!", "format!", "format_args!", "include!",
+                          "include_bytes!", "include_str!", "line!", "module_path!",
+                          "option_env!", "panic!", "print!", "println!", "scoped_thread_local!",
+                          "select!", "stringify!", "thread_local!", "try!", "unimplemented!",
+                          "unreachable!", "vec!", "write!", "writeln!"],
+
+            endTokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ',', '<', '>', '.', '{', '}'];
+
+        var auxiliaryHints = rustKeywords.map(function (s) {
             return {
                 str: s,
                 type: 'Keyword'
             };
-        }).concat(_stdMacros.map(function (s) {
+        }).concat(stdMacros.map(function (s) {
             return {
                 str: s,
                 type: 'Macro'
             };
         }));
 
-        function _extractHints(data) {
+        // Racer output -> parsed hintsList
+        function extractHints(data) {
             var rs = [],
                 ta = data.split(/(?:\r\n|\r|\n)/g);
-
-            _prefix = ta.shift().split(',').pop();
-            ta.pop();
-
+            prefix = ta.shift().split(',').pop();
+            ta.pop(); // '\n'
             try {
-                ta.pop();
+                ta.pop(); // 'END'
                 rs = ta.map(function (i) {
                     return RacerCli.parse(i);
                 });
@@ -88,29 +90,28 @@ define(function (require, exports, module) {
         function _validToken(implicitChar) {
             if (implicitChar) {
                 var code = implicitChar.charCodeAt(0);
-                return (_endTokens.indexOf(implicitChar) === -1) && (code !== 13) && (code !== 9);
+                return (endTokens.indexOf(implicitChar) === -1) && (code !== 13) && (code !== 9);
             } else {
                 return false;
             }
         }
 
-        function _resolveCachedHint(cachedHints, token) {
-            _prefix = token.string;
-            var hintsList = [],
+        // parsed hintsList from racer, cm token -> brackets hint object
+        function buildHints(parsedHints, token) {
+            prefix = token.string;
+            var i,
+                hintsList = [],
                 results = [];
-
-            if (_prefix === ':') {
-                _prefix = '';
-                hintsList = cachedHints;
+            if (prefix === ':') {
+                prefix = '';
+                hintsList = parsedHints;
             } else {
-                hintsList = cachedHints.concat(auxiliaryHints);
+                hintsList = parsedHints.concat(auxiliaryHints);
             }
-
-
-            for (var i = 0; i < hintsList.length; i++) {
-                if (_.startsWith(hintsList[i].str, _prefix)) {
+            for (i = 0; i < hintsList.length; i++) {
+                if (_.startsWith(hintsList[i].str, prefix)) {
                     var displayName = hintsList[i].str.replace(
-                        new RegExp(StringUtils.regexEscape(_prefix), "i"),
+                        new RegExp(StringUtils.regexEscape(prefix), "i"),
                         "<strong>$&</strong>"
                     );
                     results.push($('<span>').addClass('RustIDE-hints')
@@ -126,33 +127,29 @@ define(function (require, exports, module) {
             };
         }
 
-        function _resolveHint(deferredhints, token) {
-            var deferred = new $.Deferred(),
-                hintList;
+        function resolveHints(deferredhints, token) {
+            var deferred = new $.Deferred();
             deferredhints.done(function (data) {
                 console.log('data:', data);
-                hintList = _extractHints(data);
-                _cachedHints = hintList;
-                console.log('hintList:', hintList);
-                console.log('token:', token);
-                var result = _resolveCachedHint(hintList, token);
-                console.log('result:', result);
+                var result,
+                    parsedHintsList = extractHints(data);
+                cachedHints = parsedHintsList;
+                needNewHints = false;
+                result = buildHints(parsedHintsList, token);
                 deferred.resolve(result);
             }).fail(function (e) {
                 console.error('e:', e);
             });
-
             return deferred;
         }
 
         this.hasHints = function (editor, implicitChar) {
             _cm = editor._codeMirror;
             if (_validToken(implicitChar)) {
-                console.log('hasHints');
                 return true;
             } else {
-                _needNewHints = true;
-                _cachedHints = null;
+                needNewHints = true;
+                cachedHints = null;
                 return false;
             }
         };
@@ -161,37 +158,30 @@ define(function (require, exports, module) {
 
             var cursor = _cm.getCursor(),
                 txt = _cm.getValue();
-            _lastToken = _cm.getTokenAt(cursor);
+            lastToken = _cm.getTokenAt(cursor);
 
             //implicitChar is null when press Backspace
-            if (_validToken(implicitChar) || _validToken(_lastToken.string)) {
-                var tokenType = _lastToken.type;
-                console.log('_lastToken:', _lastToken);
+            if (_validToken(implicitChar) || _validToken(lastToken.string)) {
+                var tokenType = lastToken.type;
                 if (['string', 'comment', 'meta', 'def'].indexOf(tokenType) > -1) {
                     return false;
-                } else {
-                    _needNewHints = true;
-                    console.log('_needNewHints:', _needNewHints);
-                    if ((_needNewHints) || (_previousTokenStr[0] !== _lastToken.string[0]) || implicitChar === ':') {
-                        console.info('Asking Hints----------------');
-                        _needNewHints = true;
-                        _cachedHints = null;
-                        _previousTokenStr = _lastToken.string;
-                        return _resolveHint(RacerCli.getHintsD(txt, cursor, ++vpet), _lastToken);
-                    }
-
-                    /*
-                    if (_cachedHints) {
-                        return _resolveCachedHint(_cachedHints, _lastToken);
-
-                    }
-                    */
-                    return false;
                 }
+                if (needNewHints || (preTokenStr[0] !== lastToken.string[0]) || implicitChar === ':') {
+                    console.log('Asking Hints');
+                    needNewHints = true;
+                    cachedHints = null;
+                    preTokenStr = lastToken.string;
+                    return resolveHints(RacerCli.getHintsD(txt, cursor, ++vpet), lastToken);
+                }
+                if (cachedHints) {
+                    return buildHints(cachedHints, lastToken);
+
+                }
+                return false;
+
             } else {
                 return false;
             }
-
         };
 
         this.insertHint = function ($hint) {
@@ -199,7 +189,7 @@ define(function (require, exports, module) {
                 throw new TypeError("Must provide valid hint and hints object as they are returned by calling getHints");
             } else {
                 console.info('$hint: ' + $hint.text());
-                _cm.replaceSelection($hint.text().substring(_prefix.length));
+                _cm.replaceSelection($hint.text().substring(prefix.length));
             }
         };
     }
