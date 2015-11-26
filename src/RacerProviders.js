@@ -19,8 +19,8 @@ define(function (require, exports, module) {
 
     var MultiRangeInlineEditor = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
         DocumentManager = brackets.getModule("document/DocumentManager"),
-        FileSystem = brackets.getModule('filesystem/FileSystem'),
-        StringUtils = brackets.getModule('utils/StringUtils'),
+        FileSystem = brackets.getModule("filesystem/FileSystem"),
+        StringUtils = brackets.getModule("utils/StringUtils"),
         CodeMirror = brackets.getModule("thirdparty/CodeMirror/lib/codemirror"),
         _ = brackets.getModule("thirdparty/lodash");
 
@@ -188,7 +188,7 @@ define(function (require, exports, module) {
             if (!$hint) {
                 throw new TypeError("Must provide valid hint and hints object as they are returned by calling getHints");
             } else {
-                console.info('$hint: ' + $hint.text());
+                console.log('$hint: ' + $hint.text());
                 _cm.replaceSelection($hint.text().substring(prefix.length));
             }
         };
@@ -196,28 +196,23 @@ define(function (require, exports, module) {
 
     function RustDefinitionProvider() {
 
-        // FIX-ME: use CodeMirror findMatchingBracket method to find end line.
+        // FIX-ME: cm's method might fail
         // CodeMirror' line and ch both start from 0, but brackets' start from 1, so is racer's
-        function _getDefEndLine(txt, startLine, ch) {
+        function getDefinitionEndline(txt, startLine, startChar) {
             var result,
                 tmpCm = CodeMirror($('<tmpdiv>')[0], {
                     value: txt,
                     mode: 'rust'
                 });
 
-            var pos = CodeMirror.Pos(startLine - 1, ch - 1);
-            console.log('pos:', pos);
-
-            console.log('Token:', tmpCm.getTokenAt(pos));
+            var pos = CodeMirror.Pos(startLine - 1, startChar - 1);
 
             result = tmpCm.findMatchingBracket(pos, false);
-
-            console.log('result', result);
-
             if (result) {
                 return result.to.line + 1;
             } else {
-                console.log('error when _getDefEndLine');
+                console.log('fail to get endline using codemirror');
+                // try the old method
                 var lines = txt.split('\n'),
                     firstLine = lines[startLine - 1],
                     i = 0,
@@ -227,13 +222,11 @@ define(function (require, exports, module) {
                         break;
                     }
                 }
-
                 for (l = startLine; l < lines.length; l++) {
                     if (lines[l][i] === '}') {
                         break;
                     }
                 }
-
                 return l;
             }
         }
@@ -245,6 +238,7 @@ define(function (require, exports, module) {
                 path;
 
             deferredData.done(function(data){
+                console.log('data:', data);
                 defs = data.split('\n');
                 // Don't provide def when racer returns END
                 if (defs[0] === 'END') {
@@ -269,7 +263,7 @@ define(function (require, exports, module) {
                 DocumentManager.getDocumentForPath(path).done(function (doc) {
                     var lineStart = Number(defItem.line),
                         // doc._text might be null
-                        lineEnd = _getDefEndLine(doc._text || doc.file._contents, lineStart, defItem.firstLine.length);
+                        lineEnd = getDefinitionEndline(doc._text || doc.file._contents, lineStart, defItem.firstLine.length);
 
                     var ranges = [
                         {
@@ -292,9 +286,12 @@ define(function (require, exports, module) {
             }).fail(function (e) {
                 console.error('e:', e);
             });
+
+            return deferred;
         }
 
         this.provider = function (hostEditor, pos) {
+            var filePath = hostEditor.document.file.fullPath;
             if (["text/x-rustsrc", "rust"].indexOf(hostEditor.getModeForSelection()) < 0) {
                 return null;
             }
@@ -302,8 +299,13 @@ define(function (require, exports, module) {
             if (sel.start.line !== sel.end.line) {
                 return null;
             }
-            var fpath = hostEditor.document.file.fullPath;
-            return resolveDefinition(RacerCli.getDefD('', sel.start, ++vpet, fpath), hostEditor);
+            // not always work
+            var newPos = {
+                line: pos.line + 1,
+                ch: pos.ch + 1
+            };
+            console.log('Asking Definition');
+            return resolveDefinition(RacerCli.getDefD('', newPos, ++vpet, filePath), hostEditor);
         };
     }
 

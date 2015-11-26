@@ -52,7 +52,7 @@ define(function (require, exports, module) {
     function getDefD(txt, pos, vpet, path) {
         var args = {
             txt: txt,
-            line: pos.line + 1,
+            line: pos.line,
             char: pos.ch,
             path: path,
             isPathTmp: false
