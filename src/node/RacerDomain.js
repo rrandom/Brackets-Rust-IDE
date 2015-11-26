@@ -147,27 +147,6 @@
             ], []
         );
 
-        domainManager.registerEvent(
-            domainName,
-            "defFound", [{
-                name: "data",
-                type: "string"
-            }, {
-                name: "petition",
-                type: "number"
-            }]
-        );
-        domainManager.registerEvent(
-            domainName,
-            "hintUpdate", [{
-                name: "data",
-                type: "string"
-            }, {
-                name: "petition",
-                type: "number"
-            }]
-        );
-
         _domainManager = domainManager;
 
     }
