@@ -5,21 +5,6 @@
     position: relative;
 }
 
-.RustIDE-hints-keywords:before {
-    content: "K";
-    background-color: #c800a4;
-}
-
-.RustIDE-hints-macros:before {
-    content: "M";
-    background-color: #3E999F;
-}
-
-.RustIDE-hints-fn:before {
-    content: "R";
-    background-color: #000
-}
-
 .RustIDE-hints:before {
     position: absolute;
     left: 2px;
@@ -33,13 +18,58 @@
     text-align: center;
     color: white;
     box-sizing: border-box;
+    content: "R";
+    background-color: #000
 }
 
+.RustIDE-hints-Keyword:before {
+    content: "K";
+    background-color: #c800a4;
+}
+
+.RustIDE-hints-Macro:before {
+    content: "m";
+    background-color: #3E999F;
+}
+
+.RustIDE-hints-Module:before {
+    content: "M";
+    background-color: burlywood;
+}
+
+.RustIDE-hints-Trait:before {
+    content: "T";
+    background-color: dodgerblue;
+}
+
+.RustIDE-hints-Struct:before {
+    content: "S";
+    background-color: darkslateblue;
+}
+
+.RustIDE-hints-Function:before {
+    content: "F";
+    background-color: darkgreen;
+}
+
+.RustIDE-hints-Enum:before {
+    content: "E";
+    background-color: darkkhaki;
+}
+
+.RustIDE-hints-Let:before {
+    content: "L";
+    background-color: darkorange;
+}
+
+.RustIDE-hints-EnumVariant:before {
+    content: "EV";
+    background-color: darkslateblue;
+}
 
 .CodeMirror .rust-linter-gutter {
     width: 20px;
 }
-
 
 .CodeMirror .rust-linter-gutter-icon {
     margin-left: 7px;

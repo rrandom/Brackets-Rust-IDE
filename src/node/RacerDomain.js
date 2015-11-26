@@ -35,23 +35,26 @@
     "use strict";
 
     var _domainManager,
-        Child_process = require('child_process'),
+        child_process = require('child_process'),
         fs = require('fs'),
         domainName = 'RacerDomain',
         extName = '[rust-ide]';
 
 
     // args: {txt, line, char, path, isPathTmp, command, event}
-    function racerCli(racerPath, args, petition) {
+    function racerCli(racerPath, args, petition, cb) {
         try {
             var fname = args.path,
-                output = '';
+                output = '',
+                err = '';
+
             // use tmp file or not
             if (args.isPathTmp) {
                 fname = fname + 'tmp.racertmp';
                 fs.writeFileSync(fname, args.txt);
             }
-            var racer = Child_process.spawn(
+
+            var racer = child_process.spawn(
                 racerPath, [args.command, args.line, args.char, fname]
             );
 
@@ -59,31 +62,32 @@
                 output += data.toString();
             });
 
-            racer.stderr.on('data', function (e) {
-                console.info(extName + 'stderr: ' + e);
+            racer.stderr.on('data', function (data) {
+                err += data.toString();
             });
 
             racer.on('close', function (code) {
-                _domainManager.emitEvent(domainName, args.event, [output, petition]);
+                cb(err, output);
             });
 
             racer.unref();
+
         } catch (e) {
             console.error(extName + e);
         }
     }
 
     // args: {txt, line, char, path}
-    function cmdGetHint(racerPath, args, petition) {
+    function cmdGetHint(racerPath, args, petition, cb) {
         args.command = 'complete';
         args.event = 'hintUpdate';
-        racerCli(racerPath, args, petition);
+        racerCli(racerPath, args, petition, cb);
     }
 
-    function cmdFindDefinition(racerPath, args, petition) {
+    function cmdFindDefinition(racerPath, args, petition, cb) {
         args.command = 'find-definition';
         args.event = 'defFound';
-        racerCli(racerPath, args, petition);
+        racerCli(racerPath, args, petition, cb);
     }
 
     function init(domainManager) {
@@ -99,7 +103,7 @@
             domainName, // domain name
             "getHint", // command name
             cmdGetHint, // command handler function
-            false, // asynchronous
+            true, // asynchronous
             "Return Rust Hints", [
                 {
                     name: "racerPath",
@@ -123,7 +127,7 @@
             domainName,
             "findDef",
             cmdFindDefinition,
-            false,
+            true,
             "Return found definitions", [
                 {
                     name: "racerPath",
@@ -141,27 +145,6 @@
                     description: "petition number"
                 }
             ], []
-        );
-
-        domainManager.registerEvent(
-            domainName,
-            "defFound", [{
-                name: "data",
-                type: "string"
-            }, {
-                name: "petition",
-                type: "number"
-            }]
-        );
-        domainManager.registerEvent(
-            domainName,
-            "hintUpdate", [{
-                name: "data",
-                type: "string"
-            }, {
-                name: "petition",
-                type: "number"
-            }]
         );
 
         _domainManager = domainManager;
