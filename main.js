@@ -21,8 +21,8 @@
  *
  */
 
-/*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50, browser: true */
-/*global define, $, brackets */
+/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
+/*global define, brackets */
 
 define(function (require, exports, module) {
     "use strict";
@@ -33,7 +33,7 @@ define(function (require, exports, module) {
         EditorManager = brackets.getModule("editor/EditorManager"),
         ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
         QuickOpen = brackets.getModule("search/QuickOpen"),
-        LanguageManager = brackets.getModule('language/LanguageManager');
+        LanguageManager = brackets.getModule("language/LanguageManager");
 
     var RacerSettings = require("src/dialogs/RacerSettings"),
         RacerProviders = require("src/RacerProviders"),
@@ -52,23 +52,23 @@ define(function (require, exports, module) {
                 itemSelect: QuickOpenPlugin.itemSelect
             });
 
-            LanguageManager.defineLanguage('rust', {
-                name: 'Rust',
+            LanguageManager.defineLanguage("rust", {
+                name: "Rust",
                 mode: ["rust", "text/x-rustsrc"],
-                fileExtensions: ['rs'],
-                blockComment: ['/*', '*/'],
-                lineComment: ['//']
+                fileExtensions: ["rs"],
+                blockComment: ["/*", "*/"],
+                lineComment: ["//"]
             });
 
-            LanguageManager.defineLanguage('toml', {
-                name: 'toml',
+            LanguageManager.defineLanguage("toml", {
+                name: "toml",
                 mode: ["toml", "text/x-toml"],
-                fileExtensions: ['toml'],
-                lineComment: ['#']
+                fileExtensions: ["toml"],
+                lineComment: ["#"]
             });
 
             ExtensionUtils.loadStyleSheet(module, "styles/main.css");
-            console.info('Registering Rust Providers');
+            console.info("Registering Rust Providers");
 
             var rustHintProvider = new RacerProviders.RustHintProvider(),
                 rustDefinitionProvider = new RacerProviders.RustDefinitionProvider();
@@ -78,7 +78,7 @@ define(function (require, exports, module) {
 
             LintProvider.init();
 
-            console.info('Registered Rust Providers');
+            console.info("Registered Rust Providers");
         } catch (e) {
             console.error("Error starting up Rust providers", e);
             setTimeout(startup, 10000);

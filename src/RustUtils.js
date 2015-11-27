@@ -25,7 +25,7 @@
 /*global define, $, brackets */
 
 
-// modified from JSUtils.js in https://github.com/adobe/brackets/blob/5ef84133cb8c5acdcb7e80b85bbee86f65c2c9b1/src/language/JSUtils.js
+// base on JSUtils.js in https://github.com/adobe/brackets/blob/5ef84133cb8c5acdcb7e80b85bbee86f65c2c9b1/src/language/JSUtils.js
 
 
 // TO-DO: write unit-test
@@ -390,7 +390,7 @@ define(function (require, exports, module) {
 
         if (!keepAllFiles) {
             rustFiles = fileInfos.filter(function (fileInfo) {
-                return FileUtils.getFileExtension(fileInfo.fullPath).toLowerCase() === 'js';
+                return FileUtils.getFileExtension(fileInfo.fullPath).toLowerCase() === "rs";
             });
         } else {
             rustFiles = fileInfos;

@@ -22,35 +22,29 @@
  */
 
 
-/*
- * https://github.com/adobe/brackets/wiki/Brackets-Node-Process:-Overview-for-Developers
- * https://nodejs.org/api/child_process.html
- */
-
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50,node: true */
-/*global define, $, brackets */
 
 
 (function () {
     "use strict";
 
     var _domainManager,
-        child_process = require('child_process'),
-        fs = require('fs'),
-        domainName = 'RacerDomain',
-        extName = '[rust-ide]';
+        child_process = require("child_process"),
+        fs = require("fs"),
+        domainName = "RacerDomain",
+        extName = "[rust-ide]";
 
 
     // args: {txt, line, char, path, isPathTmp, command, event}
     function racerCli(racerPath, args, petition, cb) {
         try {
             var fname = args.path,
-                output = '',
-                err = '';
+                output = "",
+                err = "";
 
             // use tmp file or not
             if (args.isPathTmp) {
-                fname = fname + 'tmp.racertmp';
+                fname = fname + "tmp.racertmp";
                 fs.writeFileSync(fname, args.txt);
             }
 
@@ -58,15 +52,15 @@
                 racerPath, [args.command, args.line, args.char, fname]
             );
 
-            racer.stdout.on('data', function (data) {
+            racer.stdout.on("data", function (data) {
                 output += data.toString();
             });
 
-            racer.stderr.on('data', function (data) {
+            racer.stderr.on("data", function (data) {
                 err += data.toString();
             });
 
-            racer.on('close', function (code) {
+            racer.on("close", function (code) {
                 cb(err, output);
             });
 
@@ -79,19 +73,17 @@
 
     // args: {txt, line, char, path}
     function cmdGetHint(racerPath, args, petition, cb) {
-        args.command = 'complete';
-        args.event = 'hintUpdate';
+        args.command = "complete";
         racerCli(racerPath, args, petition, cb);
     }
 
     function cmdFindDefinition(racerPath, args, petition, cb) {
-        args.command = 'find-definition';
-        args.event = 'defFound';
+        args.command = "find-definition";
         racerCli(racerPath, args, petition, cb);
     }
 
     function init(domainManager) {
-        console.info('Rust NodeDomain init');
+        console.info("Rust NodeDomain init");
         if (!domainManager.hasDomain(domainName)) {
             domainManager.registerDomain(domainName, {
                 major: 0,

@@ -2,7 +2,6 @@
  *
  * Licensed under MIT
  *
- * base on https://github.com/David5i6/Brackets-Go-IDE
  *
  */
 
@@ -13,8 +12,8 @@
 define(function (require, exports, module) {
     "use strict";
 
-    var ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
-        NodeDomain = brackets.getModule('utils/NodeDomain'),
+    var ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
+        NodeDomain = brackets.getModule("utils/NodeDomain"),
         PreferencesManager = brackets.getModule("preferences/PreferencesManager");
 
     var RacerDomain,
@@ -22,7 +21,7 @@ define(function (require, exports, module) {
         prefs = PreferencesManager.getExtensionPrefs("Rust-IDE");
 
 
-    RacerDomain = new NodeDomain('RacerDomain',
+    RacerDomain = new NodeDomain("RacerDomain",
         ExtensionUtils.getModulePath(module,
             "node/RacerDomain"));
 
@@ -39,9 +38,9 @@ define(function (require, exports, module) {
         RacerDomain.exec("getHint", prefs.get("racerPath"), args, vpet).done(function (data) {
             $deferred.resolve(data);
         }).fail(function (err) {
-            console.error('[RacerDomain] Fail to get hints: ', err);
+            console.error("[RacerDomain] Fail to get hints: ", err);
         });
-        return $deferred;
+        return $deferred.promise();
     }
 
     function getDefD(txt, pos, vpet, path) {
@@ -56,18 +55,18 @@ define(function (require, exports, module) {
         RacerDomain.exec("findDef", prefs.get("racerPath"), args, vpet).done(function (data) {
             $deferred.resolve(data);
         }).fail(function (err) {
-            console.error('[RacerDomain] Fail to get Def: ', err);
+            console.error("[RacerDomain] Fail to get Def: ", err);
         });
-        return $deferred;
+        return $deferred.promise();
     }
 
 
     function parse(str) {
         var result;
         try {
-            var tmp = str.split(',');
+            var tmp = str.split(",");
             result = {
-                str: tmp[0].split(' ')[1],
+                str: tmp[0].split(" ")[1],
                 line: tmp[1],
                 char: tmp[2],
                 path: tmp[3],
