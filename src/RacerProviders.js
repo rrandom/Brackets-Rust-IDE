@@ -135,7 +135,7 @@ define(function (require, exports, module) {
             }).fail(function (e) {
                 console.error("e:", e);
             });
-            return deferred.promise();
+            return deferred;
         }
 
         this.hasHints = function (editor, implicitChar) {
@@ -282,7 +282,7 @@ define(function (require, exports, module) {
                 console.error("e:", e);
             });
 
-            return deferred.promise();
+            return deferred;
         }
 
         this.provider = function (hostEditor, pos) {
