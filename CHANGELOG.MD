@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.0.8 - 2015-11-28
+ - add styles for different types of hint
+ - rewrite `HintProvider` to let hints arise immediately
+ - update rust.js to resolve inserting string bug.
+
 ## 1.0.7 - 2015-11-21
  - new feature: lint
  - delete own rust.js and simple.js since new version of Brackets includes them
