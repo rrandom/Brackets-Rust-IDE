@@ -1,34 +1,44 @@
+/**
+ *
+ * Licensed under MIT
+ *
+ */
+
+/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
+/*global define, $, brackets */
+
+
 define(function (require, exports, module) {
     "use strict";
 
     // TO-DO: inlineWidget
 
-    var DocumentManager = brackets.getModule('document/DocumentManager'),
-        CodeInspection = brackets.getModule('language/CodeInspection'),
-        EditorManager = brackets.getModule('editor/EditorManager'),
+    var DocumentManager = brackets.getModule("document/DocumentManager"),
+        CodeInspection = brackets.getModule("language/CodeInspection"),
+        EditorManager = brackets.getModule("editor/EditorManager"),
         NodeDomain = brackets.getModule("utils/NodeDomain"),
-        ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
-        ProjectManager = brackets.getModule('project/ProjectManager');
+        ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
+        ProjectManager = brackets.getModule("project/ProjectManager");
 
     var pattern = /^(.+?):(\d+):(\d+):\s+(\d+):(\d+)\s(error|fatal error|warning):\s+(.+)/;
 
-    var _domainPath = ExtensionUtils.getModulePath(module, 'node/LintDomain');
+    var _domainPath = ExtensionUtils.getModulePath(module, "node/LintDomain");
 
-    var _nodeDomain = new NodeDomain('rustLint', _domainPath);
+    var _nodeDomain = new NodeDomain("rustLint", _domainPath);
 
     // TO-DO: `--lib or --bin NAME`
     function getLintErrors(filePath, useCargo, manifest) {
         var errors,
             deferred = new $.Deferred(),
-            cmd = useCargo ? 'cargo rustc -Zno-trans --manifest-path ' + manifest : 'rustc -Z no-trans ' + filePath;
+            cmd = useCargo ? "cargo rustc -Zno-trans --manifest-path " + manifest : "rustc -Z no-trans " + filePath;
 
-        _nodeDomain.exec('getLint', cmd)
+        _nodeDomain.exec("getLint", cmd)
             .done(function (data) {
-                console.log('[RustLint]:\n', data);
+                console.log("[RustLint]:\n", data);
                 errors = parserError(data, filePath);
                 deferred.resolve(errors);
             }).fail(function (err) {
-                console.error('RustLint: ', err);
+                console.error("RustLint: ", err);
                 deferred.reject(null);
             });
 
@@ -54,7 +64,7 @@ define(function (require, exports, module) {
                             line: match[4] - 1,
                             ch: match[5]
                         },
-                        type: match[6] === 'warning' ? 'warning' : 'error',
+                        type: match[6] === "warning" ? "warning" : "error",
                         message: match[7]
                     };
                 }
@@ -69,24 +79,24 @@ define(function (require, exports, module) {
         var currentEditor = EditorManager.getActiveEditor(),
             cm = currentEditor._codeMirror,
             gutters = cm.getOption("gutters").slice(0);
-        if (gutters.indexOf('rust-linter-gutter') === -1) {
-            gutters.unshift('rust-linter-gutter');
-            cm.setOption('gutters', gutters);
+        if (gutters.indexOf("rust-linter-gutter") === -1) {
+            gutters.unshift("rust-linter-gutter");
+            cm.setOption("gutters", gutters);
         }
         return cm;
     }
 
     function makeMarker(type) {
-        var lint_type = (type === 'error') ? 'rust-linter-gutter-error' : 'rust-linter-gutter-warning',
+        var lintType = (type === "error") ? "rust-linter-gutter-error" : "rust-linter-gutter-warning",
             marker = $("<div class='rust-linter-gutter-icon' title='Click for details'>●</div>");
-        marker.addClass(lint_type);
+        marker.addClass(lintType);
         return marker[0];
     }
 
     function addMarkers(cm, errors) {
         for (var i = 0; i < errors.length; i++) {
             var marker = makeMarker(errors[i].type);
-            cm.setGutterMarker(errors[i].pos.line, 'rust-linter-gutter', marker);
+            cm.setGutterMarker(errors[i].pos.line, "rust-linter-gutter", marker);
         }
     }
 
@@ -108,16 +118,16 @@ define(function (require, exports, module) {
         return filePath.indexOf(directoryPath) === 0;
     }
 
-    // return a promise resolved with manifest-path if current project is a crate(with 'Cargo.toml')
+    // return a promise resolved with manifest-path if current project is a crate(with `Cargo.toml`)
     function locateManifest() {
         var names, ti,
             deferred = new $.Deferred();
 
-        ProjectManager.getAllFiles(ProjectManager.getLanguageFilter('toml')).done(function (files) {
+        ProjectManager.getAllFiles(ProjectManager.getLanguageFilter("toml")).done(function (files) {
             names = files.map(function (file) {
                 return file._name;
             });
-            ti = names.indexOf('Cargo.toml');
+            ti = names.indexOf("Cargo.toml");
             if (ti > -1) {
                 deferred.resolve({
                     isCrate: true,
@@ -137,7 +147,7 @@ define(function (require, exports, module) {
         var currentProject, currentFilePath,
             currentDocument = DocumentManager.getCurrentDocument();
         if (currentDocument) {
-            if (currentDocument.language._name === 'Rust') {
+            if (currentDocument.language._name === "Rust") {
                 currentFilePath = currentDocument.file._path;
                 codeMirror = registerGutter();
                 currentProject = ProjectManager.getProjectRoot();
@@ -180,8 +190,8 @@ define(function (require, exports, module) {
             scanFileAsync: linter
         });
 
-        ProjectManager.on('projectOpen', projectOpenHandler);
-        EditorManager.on('activeEditorChange', activeEditorChangeHandler);
+        ProjectManager.on("projectOpen", projectOpenHandler);
+        EditorManager.on("activeEditorChange", activeEditorChangeHandler);
     }
 
     exports.init = init;

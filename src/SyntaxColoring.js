@@ -1,5 +1,5 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50, browser: true */
-/*global define, $, brackets */
+/*global define */
 
 define(function (require, exports, module) {
     "use strict";

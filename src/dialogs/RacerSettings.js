@@ -4,11 +4,11 @@
  *
  */
 
-/*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50, browser: true */
+/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
 /*global define, $, brackets, Mustache */
 
 define(function (require, exports, module) {
-    'use strict';
+    "use strict";
     var PreferencesManager = brackets.getModule("preferences/PreferencesManager"),
         Dialogs = brackets.getModule("widgets/Dialogs"),
         CommandManager = brackets.getModule("command/CommandManager"),

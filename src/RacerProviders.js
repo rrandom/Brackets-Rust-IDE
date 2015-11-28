@@ -2,11 +2,6 @@
  *
  * Licensed under MIT
  *
- * Modified from https://github.com/David5i6/Brackets-Go-IDE
- *
- * Docs to finish this file:
- *  https://codemirror.net/doc/manual.html
- *  https://github.com/adobe/brackets/wiki/Brackets-Node-Process:-Overview-for-Developers
  *
  */
 
@@ -15,7 +10,7 @@
 /*global define, $, brackets */
 
 define(function (require, exports, module) {
-    'use strict';
+    "use strict";
 
     var MultiRangeInlineEditor = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
         DocumentManager = brackets.getModule("document/DocumentManager"),
@@ -24,7 +19,7 @@ define(function (require, exports, module) {
         CodeMirror = brackets.getModule("thirdparty/CodeMirror/lib/codemirror"),
         _ = brackets.getModule("thirdparty/lodash");
 
-    var RacerCli = require('src/RacerCli');
+    var RacerCli = require("src/RacerCli");
 
     var vpet = 0;
 
@@ -55,17 +50,17 @@ define(function (require, exports, module) {
                           "select!", "stringify!", "thread_local!", "try!", "unimplemented!",
                           "unreachable!", "vec!", "write!", "writeln!"],
 
-            endTokens = [' ', '+', '-', '/', '*', '(', ')', '[', ']', ',', '<', '>', '.', '{', '}'];
+            endTokens = [" ", "+", "-", "/", "*", "(", ")", "[", "]", ",", "<", ">", ".", "{", "}"];
 
         var auxiliaryHints = rustKeywords.map(function (s) {
             return {
                 str: s,
-                type: 'Keyword'
+                type: "Keyword"
             };
         }).concat(stdMacros.map(function (s) {
             return {
                 str: s,
-                type: 'Macro'
+                type: "Macro"
             };
         }));
 
@@ -73,16 +68,16 @@ define(function (require, exports, module) {
         function extractHints(data) {
             var rs = [],
                 ta = data.split(/(?:\r\n|\r|\n)/g);
-            prefix = ta.shift().split(',').pop();
-            ta.pop(); // '\n'
+            prefix = ta.shift().split(",").pop();
+            ta.pop(); // "\n"
             try {
-                ta.pop(); // 'END'
+                ta.pop(); // "END"
                 rs = ta.map(function (i) {
                     return RacerCli.parse(i);
                 });
             } catch (e) {
-                console.error('[RustHintProvider] extractHints: Please notify me if you see this error');
-                console.error('error:', e);
+                console.error("[RustHintProvider] extractHints: Please notify me if you see this error");
+                console.error("error:", e);
             }
             return _.uniq(rs);
         }
@@ -102,8 +97,8 @@ define(function (require, exports, module) {
             var i,
                 hintsList = [],
                 results = [];
-            if (prefix === ':') {
-                prefix = '';
+            if (prefix === ":") {
+                prefix = "";
                 hintsList = parsedHints;
             } else {
                 hintsList = parsedHints.concat(auxiliaryHints);
@@ -114,14 +109,14 @@ define(function (require, exports, module) {
                         new RegExp(StringUtils.regexEscape(prefix), "i"),
                         "<strong>$&</strong>"
                     );
-                    results.push($('<span>').addClass('RustIDE-hints')
-                        .addClass('RustIDE-hints-' + hintsList[i].type)
+                    results.push($("<span>").addClass("RustIDE-hints")
+                        .addClass("RustIDE-hints-" + hintsList[i].type)
                         .html(displayName));
                 }
             }
             return {
                 hints: results,
-                match: '',
+                match: "",
                 selectInitial: true,
                 handleWideResults: false
             };
@@ -130,7 +125,7 @@ define(function (require, exports, module) {
         function resolveHints(deferredData, token) {
             var deferred = new $.Deferred();
             deferredData.done(function (data) {
-                console.log('data:', data);
+                console.log("data:", data);
                 var result,
                     parsedHintsList = extractHints(data);
                 cachedHints = parsedHintsList;
@@ -138,7 +133,7 @@ define(function (require, exports, module) {
                 result = buildHints(parsedHintsList, token);
                 deferred.resolve(result);
             }).fail(function (e) {
-                console.error('e:', e);
+                console.error("e:", e);
             });
             return deferred;
         }
@@ -163,11 +158,11 @@ define(function (require, exports, module) {
             //implicitChar is null when press Backspace
             if (_validToken(implicitChar) || _validToken(lastToken.string)) {
                 var tokenType = lastToken.type;
-                if (['string', 'comment', 'meta', 'def'].indexOf(tokenType) > -1) {
+                if (["string", "comment", "meta", "def"].indexOf(tokenType) > -1) {
                     return false;
                 }
-                if (needNewHints || (preTokenStr[0] !== lastToken.string[0]) || implicitChar === ':') {
-                    console.log('Asking Hints');
+                if (needNewHints || (preTokenStr[0] !== lastToken.string[0]) || implicitChar === ":") {
+                    console.log("Asking Hints");
                     needNewHints = true;
                     cachedHints = null;
                     preTokenStr = lastToken.string;
@@ -188,7 +183,7 @@ define(function (require, exports, module) {
             if (!$hint) {
                 throw new TypeError("Must provide valid hint and hints object as they are returned by calling getHints");
             } else {
-                console.log('$hint: ' + $hint.text());
+                console.log("$hint: " + $hint.text());
                 _cm.replaceSelection($hint.text().substring(prefix.length));
             }
         };
@@ -200,9 +195,9 @@ define(function (require, exports, module) {
         // CodeMirror' line and ch both start from 0, but brackets' start from 1, so is racer's
         function getDefinitionEndline(txt, startLine, startChar) {
             var result,
-                tmpCm = CodeMirror($('<tmpdiv>')[0], {
+                tmpCm = CodeMirror($("<tmpdiv>")[0], {
                     value: txt,
-                    mode: 'rust'
+                    mode: "rust"
                 });
 
             var pos = CodeMirror.Pos(startLine - 1, startChar - 1);
@@ -211,19 +206,19 @@ define(function (require, exports, module) {
             if (result) {
                 return result.to.line + 1;
             } else {
-                console.log('fail to get endline using codemirror');
+                console.log("fail to get endline using codemirror");
                 // try the old method
-                var lines = txt.split('\n'),
+                var lines = txt.split("\n"),
                     firstLine = lines[startLine - 1],
                     i = 0,
                     l = 0;
                 for (i = 0; i < firstLine.length; i++) {
-                    if ([' ', '\t'].indexOf(firstLine[i]) < 0) {
+                    if ([" ", "\t"].indexOf(firstLine[i]) < 0) {
                         break;
                     }
                 }
                 for (l = startLine; l < lines.length; l++) {
-                    if (lines[l][i] === '}') {
+                    if (lines[l][i] === "}") {
                         break;
                     }
                 }
@@ -238,10 +233,10 @@ define(function (require, exports, module) {
                 path;
 
             deferredData.done(function(data){
-                console.log('data:', data);
-                defs = data.split('\n');
+                console.log("data:", data);
+                defs = data.split("\n");
                 // Don't provide def when racer returns END
-                if (defs[0] === 'END') {
+                if (defs[0] === "END") {
                     deferred.reject();
                     return null;
                 }
@@ -251,13 +246,13 @@ define(function (require, exports, module) {
                 path = defItem.path;
 
                 // Don't provide def when its a module
-                if (defItem.type === 'Module') {
+                if (defItem.type === "Module") {
                     deferred.reject();
                 }
 
                 // TO-DO: consider use FileUtils.convertWindowsPathToUnixPath();
                 if (!FileSystem.isAbsolutePath(path)) {
-                    path = path.split('\\').join('/');
+                    path = path.split("\\").join("/");
                 }
 
                 DocumentManager.getDocumentForPath(path).done(function (doc) {
@@ -268,7 +263,7 @@ define(function (require, exports, module) {
                     var ranges = [
                         {
                             document: doc,
-                            name: '',
+                            name: "",
                             lineStart: lineStart - 1,
                             lineEnd: lineEnd
                         }
@@ -281,10 +276,10 @@ define(function (require, exports, module) {
                         console.error("[RustDefinitionProvidre] Error of get def", e);
                     }
                 }).fail(function (e) {
-                    console.error('[RustDefinitionProvidre] Error of get from path e:', e);
+                    console.error("[RustDefinitionProvidre] Error of get from path e:", e);
                 });
             }).fail(function (e) {
-                console.error('e:', e);
+                console.error("e:", e);
             });
 
             return deferred;
@@ -304,8 +299,8 @@ define(function (require, exports, module) {
                 line: pos.line + 1,
                 ch: pos.ch + 1
             };
-            console.log('Asking Definition');
-            return resolveDefinition(RacerCli.getDefD('', newPos, ++vpet, filePath), hostEditor);
+            console.log("Asking Definition");
+            return resolveDefinition(RacerCli.getDefD("", newPos, ++vpet, filePath), hostEditor);
         };
     }
 
