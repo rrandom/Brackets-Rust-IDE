@@ -118,6 +118,27 @@ define(function (require, exports, module) {
 
     // ---- end gutter ----
 
+    // ---- inlineWidget ----
+
+    function toggleLineDetail(line){
+
+    }
+
+    function hideLindeDetail(widget){
+
+    }
+
+    function showLineDetail(line){
+
+    }
+
+    function getWidgetForLine(line){
+
+    }
+
+    // ---- end inlineWidget ----
+
+
     var useCargo,
         codeMirror,
         manifestPath,
