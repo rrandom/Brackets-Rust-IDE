@@ -83,3 +83,13 @@
 .rust-linter-gutter-warning {
     color: #f89406;
 }
+
+.CodeMirror *[class*="rust-linter-line-warning"] {
+    border-bottom: 2px dotted #f89406;
+    z-index: 6;
+}
+
+.CodeMirror *[class*="rust-linter-line-error"] {
+    border-bottom: 2px dotted #bd362f;
+    z-index: 7;
+}

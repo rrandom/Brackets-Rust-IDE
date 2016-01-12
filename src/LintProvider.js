@@ -58,11 +58,11 @@ define(function (require, exports, module) {
                         file: normalizePath(match[1]),
                         pos: {
                             line: match[2] - 1,
-                            ch: match[3]
+                            ch: match[3] - 1
                         },
                         endPos: {
                             line: match[4] - 1,
-                            ch: match[5]
+                            ch: +match[5]
                         },
                         type: match[6] === "warning" ? "warning" : "error",
                         message: match[7]
@@ -75,6 +75,8 @@ define(function (require, exports, module) {
 
     // ------ gutter ---
 
+    var lineMarkers = [];
+
     function registerGutter() {
         var currentEditor = EditorManager.getActiveEditor(),
             cm = currentEditor._codeMirror,
@@ -86,7 +88,7 @@ define(function (require, exports, module) {
         return cm;
     }
 
-    function makeMarker(type) {
+    function makeGutterMarker(type) {
         var lintType = (type === "error") ? "rust-linter-gutter-error" : "rust-linter-gutter-warning",
             marker = $("<div class='rust-linter-gutter-icon' title='Click for details'>●</div>");
         marker.addClass(lintType);
@@ -95,13 +97,20 @@ define(function (require, exports, module) {
 
     function addMarkers(cm, errors) {
         for (var i = 0; i < errors.length; i++) {
-            var marker = makeMarker(errors[i].type);
+            var marker = makeGutterMarker(errors[i].type);
+            lineMarkers.push(cm.markText(errors[i].pos, errors[i].endPos,{className: 'rust-linter-line-' + errors[i].type}));
             cm.setGutterMarker(errors[i].pos.line, "rust-linter-gutter", marker);
         }
     }
 
     function updateMarkers(errors, cm) {
         cm.clearGutter("rust-linter-gutter");
+        lineMarkers.forEach(function(lineMarker){
+            lineMarker.clear();
+        });
+
+        lineMarkers = [];
+
         if (errors.length > 0) {
             addMarkers(cm, errors);
         }
